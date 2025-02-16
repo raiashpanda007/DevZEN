@@ -2,14 +2,17 @@
 
 import ThemeStore from "./ThemeStore";
 import LoginButton from "@workspace/ui/components/Login";
+import { Button } from "@workspace/ui/components/button";
+import { FiGithub } from "react-icons/fi";
 const NavBar = () => {
   return (
-    <nav className="w-full flex justify-between items-center p-4 border">
-      <div className="flex items-center">
-        <img src="logo.png" alt="" className="h-12 w-12 rounded-full border" />
-        <h1 className="text-2xl font-semibold ml-4">DenZEN</h1>
+    <nav className="z-10 h-24 w-full flex justify-between items-center  border fixed backdrop-blur-md">
+      <div className="w-5/6 flex items-center">
+        <img src="logo.png" alt="" className="sm:h-12 sm:w-12 h-8 w-8 rounded-full border" />
+        <h1 className="text-2xl font-semibold ">DevZEN</h1>
       </div>
-      <div className="flex items-center">
+      <div className="flex sm:w-1/6 items-center justify-between ">
+        <Button variant={"ghost"}> <FiGithub/> </Button>
         <LoginButton/>
         <ThemeStore />
       </div>

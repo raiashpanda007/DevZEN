@@ -14,6 +14,7 @@ const config = {
       fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
         mono: ["var(--font-mono)", ...fontFamily.mono],
+        montserrat:['Montserrat', "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -55,7 +56,20 @@ const config = {
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
-    },
+    }, keyframes:{
+      slideInFromBelow:{
+        "0%": { transform: "translateY(100%)", opacity: "0" },
+        "95%":{transform: "translateY(-10%)" , opacity:"1"},
+        "100%": { transform: "translateY(0)", opacity: "1"}
+      },
+      slideIn: {
+        '0%': { transform: 'translateX(-100%)' },
+        '100%': { transform: 'translateX(0)' },
+      },
+    },animation:{
+      slideInFromBelow: "slideInFromBelow 1s ease-out 0.5s forwards",
+      slideIn: 'slideIn 1s ease forwards',
+    }
   },
   plugins: [tailwindcssAnimate],
 } satisfies Config
