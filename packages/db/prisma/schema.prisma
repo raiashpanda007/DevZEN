@@ -15,7 +15,8 @@ datasource db {
 
 model User {
   id        String  @id @default(cuid())
-  username     String   @unique
+  username     String?   @unique
+  email       String?  @unique
   Account    Account
   profile    String?
   createdAt DateTime @default(now())
@@ -25,4 +26,5 @@ model User {
 enum Account {
   GOOGLE
   GITHUB
+  EMAIL
 }
