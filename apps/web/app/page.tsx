@@ -1,9 +1,14 @@
+import { getServerSession } from "next-auth";
+import NEXT_AUTH_CONFIG from "@/lib/Auth/auth_Config";
 import { Button } from "@workspace/ui/components/button";
-import NavBar from "@/components/NavBar";
-import {ScrollArea} from "@workspace/ui/components/scroll-area";
+
+
+
+
 export default function Page() {
+  const session = getServerSession(NEXT_AUTH_CONFIG);
   return (
-    <div className="relative top-20 w-full h-[calc(100% - 80px) p-8">
+    <div className="font-sans relative top-20 w-full h-[calc(100% - 80px) p-8">
       <div className=" flex flex-col items-center h-44 ">
         <div className="flex h-28 items-center">
           <img src="logo.png" alt="" className="h-full" />
@@ -16,7 +21,9 @@ export default function Page() {
           meets simplicity.
         </p>
       </div>
-      <div className="h-32 w-full"></div>
+      <div className="h-32 w-full flex justify-center items center">
+        <Button variant={'default'} className="font-semibold"> START NOW </Button>
+      </div>
       
       <div className="flex sm:h-48 h-20 w-full space-x-9  ">
         <img

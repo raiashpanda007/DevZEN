@@ -1,6 +1,7 @@
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import { NextAuthOptions } from 'next-auth';
+import {prisma} from '@workspace/db/';
 
  const NEXT_AUTH_CONFIG : NextAuthOptions = {
     providers :[
@@ -13,7 +14,6 @@ import { NextAuthOptions } from 'next-auth';
             clientSecret: process.env.GITHUB_CLIENT_SECRET || ''
         }),
         
-    ]
+    ],secret: process.env.SECRET,
 }
-
 export default NEXT_AUTH_CONFIG;
