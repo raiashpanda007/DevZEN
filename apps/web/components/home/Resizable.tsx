@@ -15,7 +15,7 @@ function Resizable({children}:{children:React.ReactNode}) {
   return (
     <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex">
       <Button className="absolute rounded-lg" variant={"ghost"} onClick={()=>{
-        setCurrentSize(currentSize === 0 ? 20 : 0);
+        setCurrentSize(currentSize === 0 ? 20 : 0 );
       }}>
         <FiMenu />
       </Button>
@@ -25,6 +25,7 @@ function Resizable({children}:{children:React.ReactNode}) {
           defaultSize={20} 
           minSize={0} 
           maxSize={20} 
+          onResize={(size) => setCurrentSize(size)}
           
           
         >
