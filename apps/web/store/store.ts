@@ -1,7 +1,10 @@
 
 import { configureStore } from '@reduxjs/toolkit';
+import userstatus from './userstatus';
 export const store = configureStore({
-    reducer: {},
+    reducer: {
+        userstatus,
+    },
 });
 
 export type AppDispatch = typeof store.dispatch;

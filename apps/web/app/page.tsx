@@ -1,11 +1,7 @@
-import { getServerSession } from "next-auth";
-import NEXT_AUTH_CONFIG from "@/lib/Auth/auth_Config";
-import { Button } from "@workspace/ui/components/button";
 import HomeCards from "@/components/Landing/Cards";
 import SendingHomeButton from "@/components/Landing/SendingHomeButton";
 
 export default function Page() {
-  const session = getServerSession(NEXT_AUTH_CONFIG);
   return (
     <div className="font-sans relative top-20 w-full h-[calc(100% - 80px) p-8">
       <div className=" flex flex-col items-center h-44 ">
