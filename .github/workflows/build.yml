@@ -1,0 +1,28 @@
+name: Build on PR and push to main branch
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps: 
+      - uses: actions/checkout@v3
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.12.0'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Generate Prisma Client
+        run: pnpm generate
+        
+      - name: Build Command
+        run: npm run build

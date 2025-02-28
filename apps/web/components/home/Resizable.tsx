@@ -1,5 +1,5 @@
-"use client"
-import React from 'react'
+"use client";
+import React from "react";
 import { Button } from "@workspace/ui/components/button";
 import {
   ResizableHandle,
@@ -8,36 +8,48 @@ import {
 } from "@workspace/ui/components/resizable";
 import { useState } from "react";
 import { FiMenu } from "react-icons/fi";
+import SearchInput from "./Resizable Components/Search";
+import CreateProject from "./Resizable Components/CreateProject";
 
-function Resizable({children}:{children:React.ReactNode}) {
-
+function Resizable({ children }: { children: React.ReactNode }) {
   const [currentSize, setCurrentSize] = useState(20);
   return (
     <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex">
-      <Button className="absolute rounded-lg" variant={"ghost"} onClick={()=>{
-        setCurrentSize(currentSize === 0 ? 20 : 0 );
-      }}>
+      <Button
+        className="absolute rounded-lg"
+        variant={"ghost"}
+        onClick={() => {
+          setCurrentSize(currentSize === 0 ? 20 : 0);
+        }}
+      >
         <FiMenu />
       </Button>
-      <ResizablePanelGroup direction="horizontal" className="h-full border" style={{ minWidth: "20%" }}>
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="h-full border"
+        style={{ minWidth: "20%" }}
+      >
         <ResizablePanel
           className={`h-full ${currentSize === 0 ? "hidden" : ""}`}
-          defaultSize={20} 
-          minSize={0} 
-          maxSize={20} 
+          defaultSize={20}
+          minSize={0}
+          maxSize={20}
           onResize={(size) => setCurrentSize(size)}
-          
-          
         >
-          <div className="h-full relative top-10">hi there</div>
+          <div className="h-full relative top-10">
+            <div className="h-1/6 border flex flex-col justify-center">
+              <SearchInput />
+              <CreateProject />
+            </div>
+          </div>
         </ResizablePanel>
         <ResizableHandle className="h-full" withHandle />
         <ResizablePanel className="h-full flex items-center">
-            {children}
+          {children}
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
-  )
+  );
 }
 
-export default Resizable
+export default Resizable;

@@ -1,26 +1,10 @@
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { NextAuthOptions, Session } from "next-auth";
-import { prisma } from "@workspace/db/";
-import { JWT } from "next-auth/jwt";
+import { NextAuthOptions } from "next-auth";
+import { prisma } from "@workspace/db";
 
-interface SessionProps extends Session {
-  user: {
-    id: string;
-    name?: string | null;
-    email?: string | null;
-    image?: string;
-    Account?: "GOOGLE" | "GITHUB";
-  };
-}
 
-interface JWTProps extends JWT {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string;
-  Account?: "GOOGLE" | "GITHUB";
-}
+
 
 const NEXT_AUTH_CONFIG: NextAuthOptions = {
   providers: [

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { Button } from "@workspace/ui/components/button";
 import {
   ResizableHandle,
@@ -10,9 +10,9 @@ import { FiMenu } from "react-icons/fi";
 
 function Page() {
   return (
-    <>
-    Home page
-    </>
+    <div className="flex items-center justify-center h-full w-full">
+      Welcome to DevZEN start building your app here.
+    </div>
   );
 }
 
