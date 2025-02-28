@@ -17,12 +17,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22.12.0'
+          cache: 'pnpm' # Caches pnpm dependencies
+
+      - name: Install pnpm
+        run: npm install -g pnpm
 
       - name: Install Dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Generate Prisma Client
         run: pnpm generate
         
       - name: Build Command
-        run: npm run build
+        run: pnpm build
