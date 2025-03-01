@@ -9,7 +9,7 @@ import {
 import { useState } from "react";
 import { FiMenu } from "react-icons/fi";
 import SearchInput from "./Resizable Components/Search";
-import CreateProject from "./Resizable Components/CreateProject";
+import CreateProject from "./Resizable Components/CreateProject/CreateProject";
 
 function Resizable({ children }: { children: React.ReactNode }) {
   const [currentSize, setCurrentSize] = useState(20);

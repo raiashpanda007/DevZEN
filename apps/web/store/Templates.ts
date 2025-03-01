@@ -21,7 +21,7 @@ const initalState: Template[] = [
     {
         name: 'Node JS with TypeScript',
         id: '4',
-        image: 'node-js.svg',
+        image: 'typescript.svg',
 
     }, 
     {
@@ -38,6 +38,15 @@ const initalState: Template[] = [
         name: 'Python with Django',
         id: '7',
         image: 'django.svg',
+    },
+    {
+        name:'NextJS with TypeScript',
+        id: '8',
+        image: 'next.svg',
+    },{
+        name: 'Next with TurboRepo',
+        id: '9',
+        image: 'next.svg',
     }
 
 ]
