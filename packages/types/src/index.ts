@@ -1,2 +1,2 @@
 import { Template } from "./Templates"
-export  {Template}
+export  type {Template}
