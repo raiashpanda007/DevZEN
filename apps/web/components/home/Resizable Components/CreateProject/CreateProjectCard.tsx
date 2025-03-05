@@ -1,14 +1,20 @@
-import React from "react";
-import { Button } from "@workspace/ui/components/button";
+import {useState} from "react";
 import { Input } from "@workspace/ui/components/input";
-import { Label } from "@workspace/ui/components/label";
 import Search from "./Search";
-function CreateProjectCard() {
+import { Template } from "@workspace/types";
+interface CreateProjectCardProps {
+  
+  setProjectName: React.Dispatch<React.SetStateAction<string | null>>;
+  selectedTemplate: Template | undefined;
+  setSelectedTemplate: React.Dispatch<React.SetStateAction<Template | undefined>>;
+
+}
+function CreateProjectCard({ setProjectName, selectedTemplate, setSelectedTemplate }: CreateProjectCardProps) {
+  
   return (
-    <div>
+    <div className="space-y-3">
       <Input placeholder="Project Name" className="w-full" />
-      <Label>Select template</Label>
-      <Search/>
+      <Search selectedTemplate={selectedTemplate} setSelectedTemplate={setSelectedTemplate} />
     </div>
   );
 }
