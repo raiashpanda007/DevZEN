@@ -3,61 +3,55 @@ import GitHubProvider from "next-auth/providers/github";
 import { NextAuthOptions } from "next-auth";
 import { prisma } from "@workspace/db";
 
-
-
-
 const NEXT_AUTH_CONFIG: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.NEXT_GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.NEXT_GOOGLE_CLIENT_SECRET || "",
     }),
     GitHubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
+      clientId: process.env.NEXT_GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.NEXT_GITHUB_CLIENT_SECRET || "",
     }),
   ],
-  secret: process.env.SECRET,
-  callbacks: {
-    async signIn({ user }) {
-      return !!user.name;
-    },
-    async jwt({ token, account, user }) {
-      try {
-        if (user) {
-          let dbUser = await prisma.user.findUnique({
-            where: { username: user.name ?? undefined },
-          });
-          console.log("dbUser", dbUser);
-          if (!dbUser) {
-            dbUser = await prisma.user.create({
-              data: {
-                username: user.name!,
-                email: user.email,
-                Account: account?.provider === "google" ? "GOOGLE" : "GITHUB",
-                profile: user.image,
-              },
-            });
-          }
+  secret: process.env.NEXT_AUTH_SECRET,
 
-          token.id = dbUser.id;
-          token.name = dbUser.username;
-          token.email = dbUser.email;
-          token.image = dbUser.profile;
-          token.Account = dbUser.Account;
-        }
+  callbacks: {
+    async jwt({ token, account, user }:any) {
+      try {
+        if (!token.email) return token; // Ensure email exists
+  
+        const dbUser = await prisma.user.upsert({
+          where: { email: token.email },
+          update: {},
+          create: {
+            email: token.email,
+            username: token.name ?? "New User",
+          profile: token.picture,
+            Account: account?.provider === "google" ? "GOOGLE" : "GITHUB",
+          },
+        });
+  
+        token.id = dbUser.id;
+        token.name = dbUser.username;
+        token.email = dbUser.email;
+        token.image = dbUser.profile;
+        token.Account = dbUser.Account;
+  
       } catch (error) {
-        console.error("Error in login:", error);
+        console.error("JWT Callback Error: ", error);
+        
       }
       return token;
     },
-    async session({ session, token }: any)  {
+
+    async session({ session, token }: any) {
       if (session.user) {
-        session.user.id = token.id ?? "";
-        session.user.email = token.email ?? null;
-        session.user.name = token.name ?? null;
-        session.user.image = token.image ?? undefined;
-        session.user.Account = token.Account ?? undefined;
+        session.user.id = token.id; // Ensure `id` is included
+        session.user.email = token.email;
+        session.user.name = token.name;
+        session.user.image = token.image;
+        session.user.Account = token.Account;
       }
       return session;
     },
