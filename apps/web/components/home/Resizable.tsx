@@ -28,7 +28,7 @@ function Resizable({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex">
+    <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex z-1">
       {/* Toggle Button */}
       <Button
         className="absolute rounded-lg z-10"

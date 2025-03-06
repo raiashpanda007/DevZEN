@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "@workspace/ui/globals.css";
 import NavBar from "@/components/NavBar";
 import { Providers } from "@/lib/Provider/Providers";
+import LoaderScreen from "@/components/Loader/LoaderScreen";
 
 const fontSans = Geist({
   subsets: ["latin"],
@@ -31,6 +32,8 @@ export default function RootLayout({
       >
         <Providers>
           <NavBar />
+
+          <LoaderScreen/>
           {children}
         </Providers>
       </body>

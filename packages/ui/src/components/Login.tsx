@@ -12,7 +12,7 @@ function LoginButton() {
   return (
     <>
     {status==='authenticated' ? (
-      <Button onClick={() => signOut()} className="font-poppins font-semibold" variant={'destructive'}>Logout<FiLogOut/></Button>
+      <Button onClick={() => signOut()} className="font-poppins sm:w-20 font-semibold" variant={'destructive'}><FiLogOut/></Button>
     ) : (
       <Button onClick={() => signIn()} className="font-poppins font-semibold">Login</Button>
     )}

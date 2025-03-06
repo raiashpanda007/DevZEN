@@ -22,7 +22,7 @@ const ThemeStore = () => {
   return (
     <div>
       <Button variant={"ghost"} onClick={changeTheme}>
-        {theme === "dark" ? < FiSun className="h-5 sm:10" /> : <FiMoon />}
+        {theme === "dark" ? < FiSun className="h-5 sm:10" /> : <FiMoon className="h-5 sm:10"/>}
       </Button>
     </div>
   );

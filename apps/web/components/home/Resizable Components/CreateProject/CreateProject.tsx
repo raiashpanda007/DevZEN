@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import { useState } from "react";
 import {
   AlertDialog,
@@ -10,21 +10,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@workspace/ui/components/alert-dialog";
+import { loadinghandler } from "@/store/Loader";
 import { Button } from "@workspace/ui/components/button";
 import CreateProjectCard from "./CreateProjectCard";
 import { FiPlus } from "react-icons/fi";
 import { Template } from "@workspace/types";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/store/store";
 
 function CreateProjectDialog() {
-  const [projectName, setProjectName] = useState<string | null>('');
+  const loader = useSelector((state: RootState) => state.loader.isLoading);
+  const dispatch = useDispatch();
+
+  const [projectName, setProjectName] = useState<string | null>("");
   const [selectedTemplate, setSelectedTemplate] = useState<Template | undefined>();
   const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Control dialog close
 
   const handleCreateProject = () => {
     setError(null); // Reset previous errors
 
-    if (!projectName || projectName.trim() === "") {
+    if (!projectName || projectName.length <= 1) {
       setError("Please enter a project name");
       return;
     }
@@ -33,28 +38,39 @@ function CreateProjectDialog() {
       return;
     }
 
-    // If validation passes, close the dialog
-    setIsSubmitting(true);
+    // Dispatch loading state
+    dispatch(loadinghandler({ isLoading: true, message: "Creating your new app and setting up environment..." }));
   };
 
   return (
-    <AlertDialog open={isSubmitting ? false : undefined}> 
-      <AlertDialogTrigger asChild className="px-2">
+    <AlertDialog>
+      {/* Button to trigger dialog */}
+      <AlertDialogTrigger asChild>
         <Button className="w-full flex items-center space-x-3" variant="ghost">
           Create Project <FiPlus />
         </Button>
       </AlertDialogTrigger>
+
+      {/* Dialog Content */}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Create a New App</AlertDialogTitle>
           <AlertDialogDescription>
-            Create your new app by selecting a template
+            Create your new app by selecting a template.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <CreateProjectCard setProjectName={setProjectName} selectedTemplate={selectedTemplate} setSelectedTemplate={setSelectedTemplate} />
+
+        {/* Project Input & Selection */}
+        <CreateProjectCard
+          setProjectName={setProjectName}
+          selectedTemplate={selectedTemplate}
+          setSelectedTemplate={setSelectedTemplate}
+        />
+
+        {/* Footer Buttons */}
         <AlertDialogFooter>
           {error && <p className="text-red-500">{error}</p>}
-          <AlertDialogCancel onClick={() => setIsSubmitting(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <Button onClick={handleCreateProject}>Create</Button>
         </AlertDialogFooter>
       </AlertDialogContent>

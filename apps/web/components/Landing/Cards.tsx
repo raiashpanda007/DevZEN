@@ -25,7 +25,7 @@ const HomeCards = () => {
           </p>
         </div>
       </motion.div>
-      <div className="h-60 sm:h-20 w-full"></div>
+      <div className="h-80 sm:h-20 w-full"></div>
       <div className="flex sm:justify-end  sm:h-48 h-20 w-full space-x-9  ">
         <div className="w-1/2 animate-slideIn">
           <h1 className="text-3xl  font-bold">Instant Coding, Zero Setup</h1>

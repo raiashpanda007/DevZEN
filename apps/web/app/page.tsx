@@ -1,6 +1,8 @@
 import HomeCards from "@/components/Landing/Cards";
 import SendingHomeButton from "@/components/Landing/SendingHomeButton";
 
+
+
 export default function Page() {
   return (
     <div className="font-sans relative top-20 w-full h-[calc(100% - 80px) p-8">
@@ -18,6 +20,7 @@ export default function Page() {
       </div>
       <SendingHomeButton />
       <HomeCards />
+      
       
     </div>
   );

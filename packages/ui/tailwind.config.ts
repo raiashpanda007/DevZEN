@@ -66,9 +66,14 @@ const config = {
         '0%': { transform: 'translateX(-100%)' },
         '100%': { transform: 'translateX(0)' },
       },
+      spin: {
+        "0%": { transform: "rotate(0deg)" },
+        "100%": { transform: "rotate(360deg)" },
+      }
     },animation:{
       slideInFromBelow: "slideInFromBelow 1s ease-out 0.5s forwards",
       slideIn: 'slideIn 1s ease forwards',
+      spin: "spin 1s linear infinite",
     }
   },
   plugins: [tailwindcssAnimate],

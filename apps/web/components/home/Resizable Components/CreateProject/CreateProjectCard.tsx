@@ -13,7 +13,7 @@ function CreateProjectCard({ setProjectName, selectedTemplate, setSelectedTempla
   
   return (
     <div className="space-y-3">
-      <Input placeholder="Project Name" className="w-full sm:placeholder:text-1xl placeholder:text-xs" />
+      <Input placeholder="Project Name" className="w-full sm:placeholder:text-1xl placeholder:text-xs" onChange={(e) => setProjectName(e.target.value)} />
       <Search selectedTemplate={selectedTemplate} setSelectedTemplate={setSelectedTemplate} />
     </div>
   );
