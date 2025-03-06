@@ -23,6 +23,20 @@ model User {
   
 
 }
+
+
+
+enum Templates {
+  NODE_JS
+  NODE_JS_TYPESCRIPT
+  REACT
+  REACT_TYPESCRIPT
+  CPP
+  PYTHON
+  PYTHON_DJANGO
+  NEXT_JS
+  NEXT_JS_TYPESCRIPT
+}
 enum Account {
   GOOGLE
   GITHUB
