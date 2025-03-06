@@ -27,7 +27,6 @@ model User {
 model Projects {
   id        String  @id @default(cuid())
   name      String
-  description String
   template  Templates
   user      User @relation(fields: [userId], references: [id])
   userId    String
