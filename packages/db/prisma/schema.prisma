@@ -20,11 +20,19 @@ model User {
   Account    Account
   profile    String?
   createdAt DateTime @default(now())
-  
+  Projects  Projects[]
 
 }
 
-
+model Projects {
+  id        String  @id @default(cuid())
+  name      String
+  description String
+  template  Templates
+  user      User @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+}
 
 enum Templates {
   NODE_JS
@@ -35,7 +43,7 @@ enum Templates {
   PYTHON
   PYTHON_DJANGO
   NEXT_JS
-  NEXT_JS_TYPESCRIPT
+  NEXT_JS_TURBO
 }
 enum Account {
   GOOGLE
