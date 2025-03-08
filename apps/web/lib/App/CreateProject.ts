@@ -7,6 +7,7 @@ import { CreateProjectSchema} from '@workspace/types'
 import { Templates } from "@prisma/client";
 
 const CreateProject = async (req:NextRequest) =>{
+    console.log("Create Project")
     const curUser = await getServerSession(NEXT_AUTH_CONFIG) 
 
     if( !curUser || !curUser.user){
@@ -21,17 +22,28 @@ const CreateProject = async (req:NextRequest) =>{
     }
     const {name,template} =parsedBody.data 
     
-    const project = await prisma.projects.create({
-        data:{
-            name,
-            template:template.id as Templates,
-            user:{
-                connect:{
-                    id:user.id
+    try {
+        const project = await prisma.projects.create({
+            data:{
+                name,
+                template:template.id as Templates,
+                user:{
+                    connect:{
+                        id:user.id
+                    }
                 }
             }
-        }
-    })
+        })
+        return NextResponse.json(new Response(200, "Project Created", project),
+        {status:200})
+        
+    } catch (error) {
+        return NextResponse.json(new Response(500, "Internal Server Error", {error}),{status:500})
+        
+    }
+
     
 
 }
+
+export default CreateProject

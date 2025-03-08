@@ -17,16 +17,21 @@ import { FiPlus } from "react-icons/fi";
 import { Template } from "@workspace/types";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/store/store";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 function CreateProjectDialog() {
+  const router = useRouter();
   const loader = useSelector((state: RootState) => state.loader.isLoading);
   const dispatch = useDispatch();
 
   const [projectName, setProjectName] = useState<string | null>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | undefined>();
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    Template | undefined
+  >();
   const [error, setError] = useState<string | null>(null);
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     setError(null); // Reset previous errors
 
     if (!projectName || projectName.length <= 1) {
@@ -37,9 +42,39 @@ function CreateProjectDialog() {
       setError("Please select a template");
       return;
     }
+    try {
+      dispatch(
+        loadinghandler({
+          isLoading: true,
+          message: "Creating your new app and setting up environment...",
+        })
+      );
+      const response = await axios.post(
+        `http://localhost:3000/api/create-project`,
+        {
+          name: projectName,
+          template: selectedTemplate,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      if (response.data.success) {
+        dispatch(loadinghandler({ isLoading: false, message: "" }));
+        router.push(`/projects/${response.data.data.id}`);
+      } 
+        dispatch(loadinghandler({ isLoading: false, message: "" }));
+        setError(response.data.message);
+      
+    } catch (error) {
+      dispatch(loadinghandler({ isLoading: false, message: ""
+      }));
+      setError(
+        "An error occurred while creating your project. Please try again."
+      );
+    }
 
     // Dispatch loading state
-    dispatch(loadinghandler({ isLoading: true, message: "Creating your new app and setting up environment..." }));
   };
 
   return (
