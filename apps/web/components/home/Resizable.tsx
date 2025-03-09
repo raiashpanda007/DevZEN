@@ -80,7 +80,7 @@ function Resizable({ children }: { children: React.ReactNode }) {
             <div className="h-5/6 space-y-10">
               <ScrollArea className="h-[calc(100%-40px)] w-full ">
                 {projects.map((project:ProjectItem) => (
-                  <ProjectsItem key={project.id} name={project.name} templateId={project.template} />
+                  <ProjectsItem key={project.id} name={project.name} template={project.template} id={project.id}/>
                 ))}
               </ScrollArea>
             </div>
