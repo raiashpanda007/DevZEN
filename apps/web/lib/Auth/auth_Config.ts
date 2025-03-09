@@ -1,41 +1,37 @@
+// nextauth-config.ts
+import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
-import { NextAuthOptions } from "next-auth";
-import { prisma } from "@workspace/db";
-
-
-
+import {prisma} from "@workspace/db";
+import { JWT } from "next-auth/jwt";
 
 const NEXT_AUTH_CONFIG: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.NEXT_GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.NEXT_GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "",
     }),
     GitHubProvider({
-      clientId: process.env.NEXT_GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.NEXT_GITHUB_CLIENT_SECRET || "",
+      clientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
+      clientSecret: process.env.NEXT_PUBLIC_GITHUB_CLIENT_SECRET || "",
     }),
   ],
-  secret: process.env.NEXT_AUTH_SECRET,
+  secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
   callbacks: {
-    async signIn({ user }) {
-      return !!user.name;
-    },
-    async jwt({ token, account, user }) {
-      try {
-        if (user) {
+    async jwt({ token, account, user }: { token: JWT; account: any; user: any }) {
+      if (user) {
+        try {
           let dbUser = await prisma.user.findUnique({
-            where: { username: user.name ?? undefined },
+            where: { email: user.email },
           });
-          console.log("dbUser", dbUser);
+
           if (!dbUser) {
             dbUser = await prisma.user.create({
               data: {
-                username: user.name!,
+                username: user.name || user.email?.split("@")[0],
                 email: user.email,
-                Account: account?.provider === "google" ? "GOOGLE" : "GITHUB",
-                profile: user.image,
+                Account: account?.provider.toUpperCase() as "GOOGLE" | "GITHUB",
+                profile: user.image || "",
               },
             });
           }
@@ -43,21 +39,22 @@ const NEXT_AUTH_CONFIG: NextAuthOptions = {
           token.id = dbUser.id;
           token.name = dbUser.username;
           token.email = dbUser.email;
-          token.image = dbUser.profile;
+          token.image = dbUser.profile || "";
           token.Account = dbUser.Account;
+        } catch (error) {
+          console.error("Error in login:", error);
         }
-      } catch (error) {
-        console.error("Error in login:", error);
       }
       return token;
     },
-    async session({ session, token }: any)  {
+
+    async session({ session, token }: any) {
       if (session.user) {
-        session.user.id = token.id ?? "";
-        session.user.email = token.email ?? null;
-        session.user.name = token.name ?? null;
-        session.user.image = token.image ?? undefined;
-        session.user.Account = token.Account ?? undefined;
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.name = token.name;
+        session.user.image = token.image;
+        session.user.Account = token.Account;
       }
       return session;
     },
