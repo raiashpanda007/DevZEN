@@ -4,51 +4,48 @@ import { Template } from '@workspace/types'
 const initalState: Template[] = [
     {
         name: 'Node JS',
-        id: 'NODE_JS',
+        id: 'node_js',
         image: 'node-js.svg',
     }, 
     {
         name: 'React JS',
-        id: 'REACT_JS',
+        id: 'react_js',
         image: 'react.svg',
     }, 
     {
         name: 'React with TypeScript',
-        id: 'REACT_TYPESCRIPT',
+        id: 'react_typescript',
         image: 'react.svg',
-
     }, 
     {
         name: 'Node JS with TypeScript',
-        id: 'NODE_JS_TYPESCRIPT',
+        id: 'node_js_typescript',
         image: 'typescript.svg',
-
     }, 
     {
         name: 'C++',
-        id: 'CPP',
+        id: 'cpp',
         image: 'cpp.svg',
     },
     {
         name: 'Python',
-        id: 'PYTHON',
+        id: 'python',
         image: 'python.svg',
     },
     {
         name: 'Python with Django',
-        id: 'PYTHON_DJANGO',
+        id: 'python_django',
         image: 'django.svg',
     },
     {
         name:'NextJS with TypeScript',
-        id: 'NEXT_JS',
+        id: 'next_js',
         image: 'next.svg',
     },{
         name: 'Next with TurboRepo',
-        id: 'NEXT_JS_TURBO',
+        id: 'next_js_turbo',
         image: 'next.svg',
     }
-
 ]
 
 const Templates = createSlice({
