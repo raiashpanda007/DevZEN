@@ -1,8 +1,9 @@
 import React from 'react'
+import MonacoEditor from './MonacoEditor'
 
 function CodeEditor() {
   return (
-    <div>CodeEditor</div>
+    <div><MonacoEditor/></div>
   )
 }
 
