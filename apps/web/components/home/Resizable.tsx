@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Button } from "@workspace/ui/components/button";
 import {
   ResizableHandle,
@@ -9,16 +9,32 @@ import {
 import { FiMenu } from "react-icons/fi";
 import SearchInput from "./Resizable Components/Search";
 import CreateProject from "./Resizable Components/CreateProject/CreateProject";
+import { ScrollArea } from "@workspace/ui/components/scroll-area";
+import axios from "axios";
+import ProjectsItem from "./Resizable Components/ProjectsItem";
+import type { ProjectItem } from "@workspace/types";
 
 function Resizable({ children }: { children: React.ReactNode }) {
   const [currentSize, setCurrentSize] = useState(20);
   const [isMobile, setIsMobile] = useState(false);
+  const [projects, setProjects] = useState([]);
 
   // Detect screen size
+  const getUserProjects = async () =>{
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project`,{withCredentials:true});
+      console.log(res.data.data);
+      if(res.data.statusCode === 200){
+        setProjects(res.data.data);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768); // Adjust breakpoint as needed
-      if (window.innerWidth < 768) setCurrentSize(30);
+      if (window.innerWidth < 768) setCurrentSize(50);
       else setCurrentSize(20);
     };
     
@@ -27,13 +43,18 @@ function Resizable({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  useEffect(() => {
+    getUserProjects();
+  }
+  , []);
+
   return (
     <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex z-1">
       {/* Toggle Button */}
       <Button
         className="absolute rounded-lg z-10"
         variant={"ghost"}
-        onClick={() => setCurrentSize(currentSize === 0 ? (isMobile ? 30 : 20) : 0)}
+        onClick={() => setCurrentSize(currentSize === 0 ? (isMobile ? 50 : 20) : 0)}
       >
         <FiMenu />
       </Button>
@@ -41,14 +62,14 @@ function Resizable({ children }: { children: React.ReactNode }) {
       <ResizablePanelGroup
         direction="horizontal"
         className="h-full border"
-        style={{ minWidth: isMobile ? "30%" : "20%" }}
+        style={{ minWidth: isMobile ? "50%" : "20%" }}
       >
         {/* Sidebar */}
         <ResizablePanel
           className={`h-full ${currentSize === 0 ? "hidden" : ""}`}
-          defaultSize={isMobile ? 30 : 20}
-          minSize={isMobile ? 30 : 0}
-          maxSize={isMobile ? 30 : 20}
+          defaultSize={isMobile ? 50 : 20}
+          minSize={isMobile ? 50 : 0}
+          maxSize={isMobile ? 50 : 20}
           onResize={(size) => setCurrentSize(size)}
         >
           <div className="h-full relative top-10">
@@ -56,12 +77,19 @@ function Resizable({ children }: { children: React.ReactNode }) {
               <SearchInput />
               <CreateProject />
             </div>
+            <div className="h-5/6 space-y-10">
+              <ScrollArea className="h-[calc(100%-40px)] w-full ">
+                {projects.map((project:ProjectItem) => (
+                  <ProjectsItem key={project.id} name={project.name} templateId={project.template} />
+                ))}
+              </ScrollArea>
+            </div>
           </div>
         </ResizablePanel>
 
         {/* Resizable Handle */}
         <ResizableHandle className="h-full" />
-
+ 
         {/* Main Content */}
         <ResizablePanel className="h-full flex items-center">
           {children}

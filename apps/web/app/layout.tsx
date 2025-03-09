@@ -23,6 +23,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <title>DevZEN | Build Something Amazing</title> 
+        <meta name="description" content="An awesome web app built with Next.js" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/logo.png" type="image/png" />
         <link rel="icon" href="/logo.svg" type="image/svg+xml" />
@@ -32,8 +34,7 @@ export default function RootLayout({
       >
         <Providers>
           <NavBar />
-
-          <LoaderScreen/>
+          <LoaderScreen />
           {children}
         </Providers>
       </body>

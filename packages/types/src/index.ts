@@ -1,4 +1,5 @@
 import { Template } from "./Templates"
-export type { Template }
+import { ProjectItem } from "./ProjectItem"
+export type { Template,ProjectItem }
 export { CreateProjectSchema } from "./CreateProjectSchema"
 
