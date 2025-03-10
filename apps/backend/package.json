@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/ws": "^8.18.0",
     "esbuild": "^0.25.0"
   },
   "dependencies": {
