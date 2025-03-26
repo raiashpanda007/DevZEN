@@ -1,4 +1,4 @@
-import { Template } from "./Templates"
+import type { Template } from "./Templates"
 import { ProjectItem } from "./ProjectItem"
 import {z as zod } from 'zod';
 export const CreateProjectSchemaBackend = zod.object({
