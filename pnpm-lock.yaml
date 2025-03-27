@@ -54,6 +54,9 @@ importers:
       '@types/express':
         specifier: ^5.0.1
         version: 5.0.1
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
       express:
         specifier: ^4.21.2
         version: 4.21.2
