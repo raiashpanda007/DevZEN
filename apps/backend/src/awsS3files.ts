@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { S3Client, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import path from "path";
 
@@ -50,6 +50,7 @@ export const getRootFilesandFolders = async (key: string, localPath: string) => 
            
             await writeFile(filePath, fileBuffer);
             console.log(`✅ Downloaded: ${file.Key} -> ${filePath}`);
+            
         }
     } catch (error) {
         console.error("❌ Error fetching S3 files:", error);
@@ -89,4 +90,18 @@ function createFolder(dirName: string): Promise<void> {
             resolve();
         });
     });
+}
+
+export const saveTheFile = async (key:string, filePath: string,content:string) => {
+    const params = {
+        Bucket: AWS_S3_BUCKET_NAME,
+        Key: key,
+        Body: content,
+    }
+    try {
+        await s3.send(new PutObjectCommand(params));
+        console.log("✅ File saved to S3:", key);
+    } catch (error) {
+        console.error("❌ Error saving file to S3:", error);
+    }
 }
