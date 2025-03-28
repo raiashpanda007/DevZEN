@@ -10,6 +10,7 @@ export type { Template,ProjectItem }
 export { CreateProjectSchema } from "./CreateProjectSchema"
 
 export const MESSAGE_INIT = "project_initialized"
+export const DIR_FETCH = "dir_fetch"
 
 
 

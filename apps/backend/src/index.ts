@@ -1,6 +1,7 @@
 import { WebSocketServer } from "ws";
-import { MESSAGE_INIT } from "@workspace/types";
+import { DIR_FETCH, MESSAGE_INIT } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
+import { fetchDir } from "./filesSystem";
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -26,9 +27,14 @@ wss.on("connection",  (ws) => {
                     ws.send(JSON.stringify({ type: "error", payload: "Project ID is required" }));
                     return;
                 }
-                await getRootFilesandFolders(`code/${projectId}`, `./temp/${projectId}`);
+                await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
                 ws.send(JSON.stringify({ type: "success", payload: "Project files will be sent." }));
-            } 
+            } else if(message.type === DIR_FETCH) {
+                const {dir, baseDir} = message.payload;
+                const dirs = await fetchDir(``, '');
+                ws.send(JSON.stringify({ type: "dir_fetch", payload: dirs }));
+
+            }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);
             ws.send(JSON.stringify({ type: "error", payload: "Invalid message format" }));
