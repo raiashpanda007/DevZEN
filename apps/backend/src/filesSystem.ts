@@ -13,7 +13,7 @@ export const fetchDir = (dir: string, baseDir: string): Promise<File[]> => {
 
         fs.readdir(absolutePath, { withFileTypes: true }, (err, files) => {
             if (err) {
-                reject(err); // Error handling
+                reject(err); 
             } else {
                 resolve(
                     files.map(file => ({

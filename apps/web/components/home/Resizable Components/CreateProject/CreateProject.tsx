@@ -22,7 +22,6 @@ import { useRouter } from "next/navigation";
 
 function CreateProjectDialog() {
   const router = useRouter();
-  const loader = useSelector((state: RootState) => state.loader.isLoading);
   const dispatch = useDispatch();
 
   const [projectName, setProjectName] = useState<string | null>("");
@@ -32,7 +31,7 @@ function CreateProjectDialog() {
   const [error, setError] = useState<string | null>(null);
 
   const handleCreateProject = async () => {
-    setError(null); // Reset previous errors
+    setError(null); 
 
     if (!projectName || projectName.length <= 1) {
       setError("Please enter a project name");
@@ -50,7 +49,7 @@ function CreateProjectDialog() {
         })
       );
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project/create`,
+        `http://localhost:3000/api/project/`,
         {
           name: projectName,
           template: selectedTemplate,

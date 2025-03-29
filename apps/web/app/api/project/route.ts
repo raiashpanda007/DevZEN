@@ -1,2 +1,3 @@
 import GetProjects from "@/lib/App/GetProjects";
-export { GetProjects as GET};
+import CreateProject from "@/lib/App/CreateProject";
+export { GetProjects as GET,CreateProject as POST};

@@ -13,7 +13,7 @@ const MonacoEditor = () => {
 
   return (
     <Editor
-      height="500px"
+      height="790px"
       defaultLanguage="javascript"
       defaultValue="// Write your code here..."
       theme="vs-dark"
