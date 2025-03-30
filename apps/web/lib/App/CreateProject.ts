@@ -5,7 +5,21 @@ import { getServerSession } from "next-auth";
 import NEXT_AUTH_CONFIG from "../Auth/auth_Config";
 import { CreateProjectSchema} from '@workspace/types'
 import { Templates } from "@prisma/client";
+import axios from "axios";
 
+
+const copyS3CodeFiles = async(projectId:string, language:string) => {
+    try {
+        const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL_SERVER}/project`, {
+            projectId,
+            language
+        })
+    } catch (error) {
+        console.error("Error in copying S3 code files:", error);
+        throw new Error("Error in copying S3 code files");
+        
+    }
+}
 const CreateProject = async (req:NextRequest) =>{
     console.log("Create Project")
     const curUser = await getServerSession(NEXT_AUTH_CONFIG) 
@@ -34,6 +48,7 @@ const CreateProject = async (req:NextRequest) =>{
                 }
             }
         })
+        await copyS3CodeFiles(project.id, template.id)
         return NextResponse.json(new Response(200, "Project Created", project),
         {status:200})
         

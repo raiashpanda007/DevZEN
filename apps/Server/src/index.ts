@@ -11,7 +11,7 @@ const CreateProjectSchemaBackend = zod.object({
 app.use(express.json());
 
 app.post('/project', async (req, res) => {
-    console.log("Received Body:", req.body); // Log request body to debug
+    console.log("Received Body:", req.body); 
     try {
         const body = req.body;
         const { projectId, language } = CreateProjectSchemaBackend.parse(body);

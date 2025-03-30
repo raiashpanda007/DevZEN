@@ -28,10 +28,18 @@ wss.on("connection",  (ws) => {
                     return;
                 }
                 await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
-                ws.send(JSON.stringify({ type: "success", payload: "Project files will be sent." }));
-            } else if(message.type === DIR_FETCH) {
-                const {dir, baseDir} = message.payload;
                 const dirs = await fetchDir(``, '');
+                ws.send(JSON.stringify({ type: "success", payload: {
+                    message: "Project initialized successfully",
+                    dirs: dirs,
+                } }));
+            } else if(message.type === DIR_FETCH) {
+                const {dir} = message.payload;
+                if(!dir) {
+                    ws.send(JSON.stringify({ type: "error", payload: "Directory is required" }));
+                    return;
+                }
+                const dirs = await fetchDir(`/workspace/${dir}`, `/${dir}`);
                 ws.send(JSON.stringify({ type: "dir_fetch", payload: dirs }));
 
             }
