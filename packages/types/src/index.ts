@@ -12,6 +12,7 @@ export { CreateProjectSchema } from "./CreateProjectSchema"
 export const MESSAGE_INIT = "project_initialized"
 export const DIR_FETCH = "dir_fetch"
 export const FILE_FETCH = "file_fetch"
-
+export const RECEIVED_DIR_FETCH = "received_dir_fetch"
+export const RECEIVED_INIT_DIR_FETCH = "received_init_dir_fetch"
 
 

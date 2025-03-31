@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH } from "@workspace/types";
+import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
 import { fetchDir, fetchFileContent } from "./filesSystem";
 
@@ -26,7 +26,7 @@ wss.on("connection", (ws) => {
                     await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
                     const dirs = await fetchDir(``, '');
                     ws.send(JSON.stringify({ 
-                        type: "Success", 
+                        type: RECEIVED_INIT_DIR_FETCH, 
                         payload: { message: "Project initialized successfully", dirs }
                     }));
                     break;
@@ -39,7 +39,7 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     const dirs = await fetchDir(`/workspace/${dir}`, `/${dir}`);
-                    ws.send(JSON.stringify({ type: "dir_fetch", payload: dirs }));
+                    ws.send(JSON.stringify({ type: RECEIVED_DIR_FETCH, payload: dirs }));
                     break;
                 }
 
