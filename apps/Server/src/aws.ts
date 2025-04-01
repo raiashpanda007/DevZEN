@@ -18,9 +18,11 @@ const s3 = new S3Client({
     },
 });
 
-export const copyFolder = async (sourcePrefix: string, destinationPrefix: string, continuationToken?: string) => {
-    
-
+export const copyFolder = async (
+    sourcePrefix: string,
+    destinationPrefix: string,
+    continuationToken?: string
+) => {
     if (!AWS_S3_BUCKET_NAME) {
         console.error("❌ AWS_S3_BUCKET_NAME is missing! Check your environment variables.");
         throw new Error("AWS_S3_BUCKET_NAME is missing from environment variables.");
@@ -29,36 +31,39 @@ export const copyFolder = async (sourcePrefix: string, destinationPrefix: string
     try {
         const listParams = {
             Bucket: AWS_S3_BUCKET_NAME,
-            Prefix: sourcePrefix,
+            Prefix: sourcePrefix.endsWith("/") ? sourcePrefix : `${sourcePrefix}/`,
             ContinuationToken: continuationToken
         };
 
         console.log("📤 Sending request to list objects...");
         const command = new ListObjectsV2Command(listParams);
         const data = await s3.send(command);
-        
 
         if (!data.Contents || data.Contents.length === 0) {
             console.log("⚠️ No files found in source folder.");
             return;
         }
 
-        for (const file of data.Contents){
+        for (const file of data.Contents) {
             if (!file.Key) continue;
-            const fileName = file.Key.replace(sourcePrefix, "");
+
+            
+            if (!file.Key.startsWith(listParams.Prefix)) continue;
+
+            const fileName = file.Key.slice(listParams.Prefix.length); 
             if (!fileName) continue;
-            const destination = `${destinationPrefix.replace(/\/$/, '')}/${fileName.replace(/^\//, '')}`;
+
+            const destination = `${destinationPrefix.replace(/\/$/, "")}/${fileName.replace(/^\//, "")}`;
             const copyParams = {
                 Bucket: AWS_S3_BUCKET_NAME,
                 CopySource: `${AWS_S3_BUCKET_NAME}/${file.Key}`,
                 Key: destination,
             };
+
+            console.log(`📂 Copying: ${file.Key} → ${destination}`);
             const copyCommand = new CopyObjectCommand(copyParams);
             await s3.send(copyCommand);
-
         }
-        
-        
 
         return data;
     } catch (error) {
@@ -66,3 +71,4 @@ export const copyFolder = async (sourcePrefix: string, destinationPrefix: string
         return error;
     }
 };
+

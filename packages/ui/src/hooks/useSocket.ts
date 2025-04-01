@@ -1,6 +1,9 @@
 import {useState, useEffect} from 'react';
+import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH } from "@workspace/types";
+import { useParams } from 'next/navigation.js';
 
 export const useSocket = (url: string) => {
+    const { project } = useParams();
     const [socket, setSocket] = useState<WebSocket | null>(null);
     
 
@@ -9,8 +12,13 @@ export const useSocket = (url: string) => {
 
         ws.onopen = () => {
             console.log('WebSocket connected');
+            ws.send(JSON.stringify({ type: MESSAGE_INIT, payload: { projectId: project } }));
             
         };
+        ws.onmessage = (event) =>{
+            const data = event.data;
+            console.log('WebSocket message received:', data.type);
+        }
 
         
 
@@ -19,7 +27,7 @@ export const useSocket = (url: string) => {
         return () => {
             ws.close();
         };
-    }, [url]);
+    }, []);
 
     return { socket };
 }

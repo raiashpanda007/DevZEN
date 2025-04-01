@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
-import { fetchDir, fetchFileContent } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent } from "./filesSystem";
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -9,7 +9,7 @@ const wss = new WebSocketServer({ port: PORT });
 wss.on("connection", (ws) => {
     console.log("New WebSocket connection established");
 
-    ws.send("Hello! WebSocket connection is successful.");
+    ws.send(JSON.stringify({ type: "connected", payload: "WebSocket connection established" }));
 
     ws.on("message", async (data) => {
         try {
@@ -24,21 +24,18 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
-                    const dirs = await fetchDir(``, '');
+                    const dirs = await fetchAllDirs(`/workspace/${projectId}`);
                     ws.send(JSON.stringify({ 
                         type: RECEIVED_INIT_DIR_FETCH, 
-                        payload: { message: "Project initialized successfully", dirs }
+                        payload: {dirs }
                     }));
                     break;
                 }
 
                 case DIR_FETCH: {
                     const { dir } = message.payload;
-                    if (!dir) {
-                        ws.send(JSON.stringify({ type: "error", payload: "Directory is required" }));
-                        return;
-                    }
-                    const dirs = await fetchDir(`/workspace/${dir}`, `/${dir}`);
+                    
+                    const dirs = await fetchAllDirs(`/workspace/${dir}`);
                     ws.send(JSON.stringify({ type: RECEIVED_DIR_FETCH, payload: dirs }));
                     break;
                 }

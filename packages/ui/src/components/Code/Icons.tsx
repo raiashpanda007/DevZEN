@@ -1,14 +1,14 @@
 import React, {ReactNode} from 'react'
-import {SiHtml5, SiCss3, SiJavascript, SiTypescript, SiJson, SiCplusplus, SiTsnode} from "react-icons/si";
+import {SiHtml5, SiCss3, SiJavascript, SiTypescript, SiJson, SiCplusplus, SiTsnode, SiReact} from "react-icons/si";
 import {FcFolder, FcOpenedFolder, FcPicture, FcFile} from "react-icons/fc";
 import {AiFillFileText} from "react-icons/ai";
 
 function getIconHelper() {
   const cache = new Map<string, ReactNode>();
   cache.set("js", <SiJavascript color="#fbcb38"/>);
-  cache.set("jsx", <SiJavascript color="#fbcb38"/>);
+  cache.set("jsx", <SiReact color="#fbcb38"/>);
   cache.set("ts", <SiTypescript color="#378baa"/>);
-  cache.set("tsx", <SiTypescript color="#378baa"/>);
+  cache.set("tsx", <SiReact color="#378baa"/>);
   cache.set("json", <SiJson color="#5656e6"/>);
   cache.set("tsconfig", <SiTsnode color="#378baa"/>);
   cache.set("jsconfig", <SiJavascript color="#fbcb38"/>);

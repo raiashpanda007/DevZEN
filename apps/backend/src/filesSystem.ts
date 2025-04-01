@@ -1,38 +1,63 @@
 import fs from 'fs';
 import path from 'path';
 
-interface File {
+
+export interface RemoteFile {
     type: "file" | "dir";
     name: string;
+    path: string;
 }
-
-export const fetchDir = (dir: string, baseDir: string): Promise<File[]> => {
+export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     return new Promise((resolve, reject) => {
-        const absolutePath = path.join('/home/ashwin-rai/Projects/DevZen/apps/backend', baseDir, dir);
+        const absolutePath = path.join('/home/ashwin-rai/Projects/DevZen/apps/backend', dir);
         console.log("Resolved path:", absolutePath);
 
-        fs.readdir(absolutePath, { withFileTypes: true }, (err, files) => {
+        fs.readdir(absolutePath, { withFileTypes: true }, async (err, dirents) => {
             if (err) {
-                reject(err); 
-            } else {
-                resolve(
-                    files.map(file => ({
-                        type: file.isDirectory() ? "dir" : "file",
-                        name: file.name,
-                        path: `${baseDir}/${file.name}`,
-                    }))
-                );
+                reject(err);
+                return;
             }
+
+            let results: RemoteFile[] = [];
+            // Process each entry found in the current directory
+            const promises = dirents.map((dirent) => {
+                const filePath = `${dir}/${dirent.name}`;
+                if (dirent.isDirectory()) {
+                    // Add the directory to the results
+                    results.push({
+                        type: "dir",
+                        name: dirent.name,
+                        path: filePath,
+                    });
+                    // Recursively fetch contents of the subdirectory
+                    return fetchAllDirs(filePath).then((childResults) => {
+                        results = results.concat(childResults);
+                    });
+                } else {
+                    // Add file entry
+                    results.push({
+                        type: "file",
+                        name: dirent.name,
+                        path: filePath,
+                    });
+                    return Promise.resolve();
+                }
+            });
+
+            Promise.all(promises)
+                .then(() => resolve(results))
+                .catch(reject);
         });
     });
-};
-export const fetchFileContent = async (file:string) =>{
+}
+
+export const fetchFileContent = async (file: string) => {
     const absolutePath = path.join('/home/ashwin-rai/Projects/DevZen/apps/backend', file);
-    return new Promise((resolve,reject) =>{
-        fs.readFile(absolutePath,"utf8",(err,data) =>{
-            if(err){
+    return new Promise((resolve, reject) => {
+        fs.readFile(absolutePath, "utf8", (err, data) => {
+            if (err) {
                 reject(err)
-            }else {
+            } else {
                 resolve(data);
             }
         })
@@ -40,20 +65,20 @@ export const fetchFileContent = async (file:string) =>{
 
 }
 
-export const Delete = async (key:string) =>{
+export const Delete = async (key: string) => {
 
 }
-export const createNewFile = async (key:string) =>{
-
-}
-
-export const createNewFolder = async (key:string) =>{
+export const createNewFile = async (key: string) => {
 
 }
 
-export const renameFile = async (key:string, newKey:string) =>{
+export const createNewFolder = async (key: string) => {
 
 }
-export const renameFolder = async (key:string, newKey:string) =>{
+
+export const renameFile = async (key: string, newKey: string) => {
+
+}
+export const renameFolder = async (key: string, newKey: string) => {
 
 }
