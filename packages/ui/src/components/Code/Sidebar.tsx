@@ -1,8 +1,8 @@
 "use client"
 import { useEffect, useState } from "react";
 import { useSocket } from "@workspace/ui/hooks/useSocket.js";
-import { File, Directory, RemoteFile, buildFileTree } from './FileStructure.js';
-import { FileTree } from "./FileTree.js";
+import { File, Directory, RemoteFile, buildFileTree } from '@workspace/ui/components/Code/FileStructure';
+import { FileTree } from "@workspace/ui/components/Code/FileTree";
 
 function Sidebar() {
   const { socket } = useSocket("ws://localhost:8080");

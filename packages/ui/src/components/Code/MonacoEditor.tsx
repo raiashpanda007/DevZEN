@@ -1,5 +1,5 @@
 "use client"
-import React, { useRef } from "react";
+import  { useRef } from "react";
 import { Editor, OnMount } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 
@@ -8,7 +8,7 @@ const MonacoEditor = () => {
 
   const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
-    console.log("Editor mounted!", editor);
+
   };
 
   return (

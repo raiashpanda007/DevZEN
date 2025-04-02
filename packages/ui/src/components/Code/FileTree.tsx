@@ -1,12 +1,11 @@
 import React, {useState} from 'react'
 import {Directory, File, sortDir, sortFile} from "./FileStructure.js";
 import {getIcon} from "./Icons.js";
-import styled from "@emotion/styled";
 
 interface FileTreeProps {
-  rootDir: Directory;   // 根目录
-  selectedFile: File | undefined;   // 当前选中文件
-  onSelect: (file: File) => void;  // 更改选中时触发事件
+  rootDir: Directory;
+  selectedFile: File | undefined;
+  onSelect: (file: File) => void;
 }
 
 export const FileTree = (props: FileTreeProps) => {
@@ -14,9 +13,9 @@ export const FileTree = (props: FileTreeProps) => {
 }
 
 interface SubTreeProps {
-  directory: Directory;   // 根目录
-  selectedFile: File | undefined;   // 当前选中文件
-  onSelect: (file: File) => void;  // 更改选中时触发事件
+  directory: Directory;
+  selectedFile: File | undefined;
+  onSelect: (file: File) => void;
 }
 
 const SubTree = (props: SubTreeProps) => {
@@ -51,47 +50,31 @@ const SubTree = (props: SubTreeProps) => {
 }
 
 const FileDiv = ({file, icon, selectedFile, onClick}: {
-  file: File | Directory; // 当前文件
-  icon?: string;          // 图标名称
-  selectedFile: File | undefined;     // 选中的文件
-  onClick: () => void;    // 点击事件
+  file: File | Directory;
+  icon?: string;
+  selectedFile: File | undefined;
+  onClick: () => void;
 }) => {
   const isSelected = (selectedFile && selectedFile.id === file.id) as boolean;
   const depth = file.depth;
   return (
-    <Div
-      depth={depth}
-      isSelected={isSelected}
+    <div
+      className={`flex items-center pl-${depth * 4} ${isSelected ? 'bg-gray-800' : 'bg-transparent'} hover:bg-gray-800 cursor-pointer`}
       onClick={onClick}>
       <FileIcon
         name={icon}
         extension={file.name.split('.').pop() || ""}/>
-      <span style={{marginLeft: 1}}>
+      <span className="ml-1">
         {file.name}
       </span>
-    </Div>
+    </div>
   )
 }
 
-const Div = styled.div<{
-  depth: number;
-  isSelected: boolean;
-}>`
-  display: flex;
-  align-items: center;
-  padding-left: ${props => props.depth * 16}px;
-  background-color: ${props => props.isSelected ? "#242424" : "transparent"};
-
-  :hover {
-    cursor: pointer;
-    background-color: #242424;
-  }
-`
-
 const DirDiv = ({directory, selectedFile, onSelect}: {
-  directory: Directory;  // 当前目录
-  selectedFile: File | undefined;    // 选中的文件
-  onSelect: (file: File) => void;  // 点击事件
+  directory: Directory;
+  selectedFile: File | undefined;
+  onSelect: (file: File) => void;
 }) => {
   let defaultOpen = false;
   if (selectedFile)
@@ -145,17 +128,8 @@ const isChildSelected = (directory: Directory, selectedFile: File) => {
 const FileIcon = ({extension, name}: { name?: string, extension?: string }) => {
   let icon = getIcon(extension || "", name || "");
   return (
-    <Span>
+    <span className="flex w-8 h-8 justify-center items-center">
       {icon}
-    </Span>
+    </span>
   )
 }
-
-const Span = styled.span`
-  display: flex;
-  width: 32px;
-  height: 32px;
-  justify-content: center;
-  align-items: center;
-`
-
