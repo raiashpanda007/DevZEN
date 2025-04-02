@@ -1,6 +1,6 @@
 import React, {useState} from 'react'
-import {Directory, File, sortDir, sortFile} from "./FileStructure.js";
-import {getIcon} from "./Icons.js";
+import {Directory, File, sortDir, sortFile} from "@workspace/ui/components/Code/FileStructure";
+import {getIcon} from "@workspace/ui/components/Code/Icons";
 
 interface FileTreeProps {
   rootDir: Directory;
