@@ -1,5 +1,5 @@
 import React, {ReactNode} from 'react'
-import {SiHtml5, SiCss3, SiJavascript, SiTypescript, SiJson, SiCplusplus, SiTsnode, SiReact} from "react-icons/si";
+import {SiHtml5, SiCss3, SiJavascript, SiTypescript, SiJson, SiCplusplus, SiTsnode, SiReact, SiGit} from "react-icons/si";
 import {FcFolder, FcOpenedFolder, FcPicture, FcFile} from "react-icons/fc";
 import {AiFillFileText} from "react-icons/ai";
 
@@ -22,6 +22,7 @@ function getIconHelper() {
   cache.set("txt", <AiFillFileText color="white"/>);
   cache.set("closedDirectory", <FcFolder/>);
   cache.set("openDirectory", <FcOpenedFolder/>);
+  cache.set("gitignore",<SiGit color="red"/>);
   return function (extension: string, name: string): ReactNode {
     if (cache.has(extension))
       return cache.get(extension);

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSocket } from "@workspace/ui/hooks/useSocket";
 import { File, Directory, RemoteFile, buildFileTree } from '@workspace/ui/components/Code/FileStructure';
 import { FileTree } from "@workspace/ui/components/Code/FileTree";
+import {ScrollArea} from "@workspace/ui/components/scroll-area";
 
 function Sidebar() {
   const { socket } = useSocket("ws://localhost:8080");
@@ -37,13 +38,13 @@ function Sidebar() {
   }
 
   return (
-    <div className="w-1/6 h-full p-4 bg-gray-900 text-white">
+    <ScrollArea className="w-1/2 sm:w-1/6 h-[calc(100vh-96px)] border p-4 text-white overflow-y-auto"> 
       {rootDir ? (
         <FileTree rootDir={rootDir} selectedFile={selectedFile} onSelect={setSelectedFile} />
       ) : (
         <div>Loading files...</div>
       )}
-    </div>
+    </ScrollArea>
   );
 }
 
