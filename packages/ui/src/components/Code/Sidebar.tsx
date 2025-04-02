@@ -1,6 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
-import { useSocket } from "@workspace/ui/hooks/useSocket.js";
+import { useSocket } from "@workspace/ui/hooks/useSocket";
 import { File, Directory, RemoteFile, buildFileTree } from '@workspace/ui/components/Code/FileStructure';
 import { FileTree } from "@workspace/ui/components/Code/FileTree";
 
