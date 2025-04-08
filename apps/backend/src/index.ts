@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH } from "@workspace/types";
+import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH,RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent } from "./filesSystem";
 
@@ -46,13 +46,16 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: { message: "Improper file path" }}));
                         return;
                     }
-                    const content = await fetchFileContent(`/workspace/${filePath}`);
+                    const content = await fetchFileContent(`./${filePath}`);
                     if (!content) {
                         ws.send(JSON.stringify({ type: "Failure", payload: { message: "File not found" }}));
                         return;
                     }
+
+                    console.log("File content:", content);
+
                     ws.send(JSON.stringify({ 
-                        type: "Success", 
+                        type: RECIEVED_FILE_FETCH, 
                         payload: { message: "File fetched successfully", content }
                     }));
                     break;

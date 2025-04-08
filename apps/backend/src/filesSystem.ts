@@ -48,9 +48,9 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
 };
 
 export const fetchFileContent = async (file: string) => {
-    const absolutePath = path.join('/home/ashwin-rai/Projects/DevZen/apps/backend', file);
+    
     return new Promise((resolve, reject) => {
-        fs.readFile(absolutePath, "utf8", (err, data) => {
+        fs.readFile(file, "utf8", (err, data) => {
             if (err) {
                 reject(err);
             } else {
