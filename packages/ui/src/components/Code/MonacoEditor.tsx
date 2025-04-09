@@ -1,11 +1,13 @@
 "use client";
 import { useRef, useEffect, useState } from "react";
-import { Editor, OnMount } from "@monaco-editor/react";
+import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
-import * as monaco from "monaco-editor";
+import loader from "@monaco-editor/loader";
+
 import Run from "@workspace/ui/components/Code/Run";
 import Console from "@workspace/ui/components/Code/Console";
 import type { File as FileTypes } from "@workspace/types";
+import { getLanguageFromFileName } from "@workspace/ui/lib/getLanguagefromName";
 
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
@@ -13,23 +15,35 @@ interface MonacoEditorProps {
 }
 
 const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<any>(null);
   const [theme, setTheme] = useState("vs-dark");
   const currTheme = useTheme().theme;
 
   useEffect(() => {
-    if (currTheme === "dark") {
-      setTheme("vs-dark");
-    } else {
-      setTheme("vs-light");
-    }
-  }, [currTheme]); // ← Added dependency
+    (loader as any).init().then((monaco: typeof import("monaco-editor")) => {
+      monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: true,
+        noSyntaxValidation: false,
+      });
+  
+      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+        allowJs: true,
+        checkJs: false,
+        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+        target: monaco.languages.typescript.ScriptTarget.ESNext,
+        module: monaco.languages.typescript.ModuleKind.ESNext,
+        esModuleInterop: true,
+      });
+    });
+
+    
+  }, []);
 
   useEffect(() => {
-    console.log("Selected file changed", selectedFile);
-  }, [selectedFile]);
+    setTheme(currTheme === "dark" ? "vs-dark" : "vs-light");
+  }, [currTheme]);
 
-  const handleEditorMount: OnMount = (editor, monaco) => {
+  const handleEditorMount = (editor: any) => {
     editorRef.current = editor;
   };
 
@@ -37,10 +51,13 @@ const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
     <div className="relative">
       <div className="w-full">
         <Editor
-          key={selectedFile?.id} // ← To reload on file switch
           height="750px"
-          language="javascript" 
-          value={selectedFile?.content || "// No content"}
+          language={
+            selectedFile
+              ? getLanguageFromFileName(selectedFile.name)
+              : "plaintext"
+          }
+          value={selectedFile?.content || "// Select a file to view/edit..."}
           theme={theme}
           options={{
             fontSize: 14,
@@ -48,11 +65,6 @@ const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
             automaticLayout: true,
           }}
           onMount={handleEditorMount}
-          // onChange={(newValue) => {
-          //   setSelectedFile((prev) =>
-          //     prev ? { ...prev, content: newValue || "" } : prev
-          //   );
-          // }}
         />
       </div>
 
