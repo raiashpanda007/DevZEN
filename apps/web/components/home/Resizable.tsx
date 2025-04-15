@@ -11,7 +11,7 @@ import SearchInput from "./Resizable Components/Search";
 import CreateProject from "./Resizable Components/CreateProject/CreateProject";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import axios from "axios";
-import ProjectsItem from "./Resizable Components/ProjectsItem";
+import ProjectsItem from "./Resizable Components/ProjectItem/ProjectsItem";
 import type { ProjectItem } from "@workspace/types";
 
 function Resizable({ children }: { children: React.ReactNode }) {
