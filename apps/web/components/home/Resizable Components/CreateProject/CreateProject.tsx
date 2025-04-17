@@ -15,8 +15,7 @@ import { Button } from "@workspace/ui/components/button";
 import CreateProjectCard from "./CreateProjectCard";
 import { FiPlus } from "react-icons/fi";
 import { Template } from "@workspace/types";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { useDispatch } from "react-redux";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 

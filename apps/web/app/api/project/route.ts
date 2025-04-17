@@ -1,3 +1,2 @@
-import GetProjects from "@/lib/App/GetProjects";
-import CreateProject from "@/lib/App/CreateProject";
-export { GetProjects as GET,CreateProject as POST};
+import {CreateProject , GetProjects,DeleteProject} from "@/lib/App/Projects/Project"
+export { GetProjects as GET,CreateProject as POST,DeleteProject as DELETE };
