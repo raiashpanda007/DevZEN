@@ -45,7 +45,7 @@ export function DeleteProjectButton({ projectId }: DeleteProjectButtonProps) {
         console.error("Failed to delete project:", response.data);
       }
       dispatch(loadinghandler({ isLoading: false, message: "" }));
-      router.push(`${process.env.NEXT_PUBLIC_AUTH_URL}/home`);
+      window.location.reload()
 
       
     } catch (error) {
