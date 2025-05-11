@@ -3,6 +3,7 @@ import React from "react";
 import MonacoEditor from "@workspace/ui/components/Code/MonacoEditor";
 import Sidebar from "@workspace/ui/components/Code/Sidebar";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export enum Type {
   FILE,
@@ -22,6 +23,8 @@ interface CommonProps {
 
 export interface File extends CommonProps {}
 function CodeEditor() {
+  const router = useRouter();
+  
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   return (
     <div className="w-full h-full flex overflow-hidden">

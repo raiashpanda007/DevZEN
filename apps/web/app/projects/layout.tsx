@@ -8,7 +8,9 @@ async function layout({children}:{children:React.ReactNode}) {
     redirect('http://localhost:3000/api/auth/signin');
   }
   return (
-    <Resizable children={children}/>
+    <>
+    {children}
+    </>
   )
 }
 
