@@ -7,8 +7,7 @@ import {
   sortFile,
 } from "@workspace/ui/components/Code/FileStructure";
 import { getIcon } from "@workspace/ui/components/Code/Icons";
-import { Button } from "@workspace/ui/components/button";
-import File_DirMoreOptions from "./DropDownButton.js";
+import File_DirMoreOptions from "@workspace/ui/components/Code/DropDownButton";
 
 interface FileTreeProps {
   rootDir: Directory;
