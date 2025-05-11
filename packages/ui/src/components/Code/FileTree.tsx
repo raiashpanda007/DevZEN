@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
-import { Directory, File, sortDir, sortFile } from "@workspace/ui/components/Code/FileStructure";
+import React, { useState } from "react";
+import { FiMoreHorizontal } from "react-icons/fi";
+import {
+  Directory,
+  File,
+  sortDir,
+  sortFile,
+} from "@workspace/ui/components/Code/FileStructure";
 import { getIcon } from "@workspace/ui/components/Code/Icons";
+import { Button } from "@workspace/ui/components/button";
+import File_DirMoreOptions from "./DropDownButton.js";
 
 interface FileTreeProps {
   rootDir: Directory;
@@ -27,45 +35,90 @@ const SubTree = (props: SubTreeProps) => {
     <div>
       {props.directory.dirs.sort(sortDir).map((dir) => (
         <React.Fragment key={dir.id}>
-          <DirDiv directory={dir} selectedFile={props.selectedFile} onSelect={props.onSelect} />
+          <DirDiv
+            directory={dir}
+            selectedFile={props.selectedFile}
+            onSelect={props.onSelect}
+          />
         </React.Fragment>
       ))}
       {props.directory.files.sort(sortFile).map((file) => (
         <React.Fragment key={file.id}>
-          <FileDiv file={file} selectedFile={props.selectedFile} onClick={() => props.onSelect(file)} />
+          <FileDiv
+            file={file}
+            selectedFile={props.selectedFile}
+            onClick={() => props.onSelect(file)}
+          />
         </React.Fragment>
       ))}
     </div>
   );
 };
 
-const FileDiv = ({ file, icon, selectedFile, onClick }: {
+const FileDiv = ({
+  file,
+  icon,
+  selectedFile,
+  onClick,
+}: {
   file: File | Directory;
   icon?: string;
   selectedFile: File | undefined;
   onClick: () => void;
 }) => {
-  const isSelected = selectedFile && selectedFile.id === file.id;
+  const isSelected = selectedFile?.id === file.id;
   const depth = file.depth;
   const paddingLeft = Math.min(depth * 16, 64);
 
   return (
     <div
-      style={{ paddingLeft: `${paddingLeft}px` }}
-      className={`flex items-center cursor-pointer p-1 rounded-md
-        ${isSelected ? "bg-gray-300 dark:bg-gray-800" : "bg-transparent"} 
+      style={{
+        paddingLeft: `${paddingLeft}px`,
+        paddingRight: `12px`,
+      }}
+      className={`
+        group
+        relative
+        flex
+        w-full
+        items-center
+        cursor-pointer
+        p-1
+        rounded-md
+        ${isSelected ? "bg-gray-300 dark:bg-gray-800" : "bg-transparent"}
         hover:bg-gray-200 dark:hover:bg-gray-700
         text-black dark:text-white
       `}
-      onClick={onClick}
     >
-      <FileIcon name={icon} extension={file.name.split('.').pop() || ""} />
-      <span className="ml-1">{file.name}</span>
+      <div className="flex items-center min-w-0 flex-1 overflow-hidden" onClick={onClick}>
+        <FileIcon
+          name={icon}
+          extension={file.name.split(".").pop() || ""}
+        />
+        <span className="ml-1 truncate">{file.name}</span>
+      </div>
+
+      <div
+        className="
+          absolute
+          right-[12px]
+          top-1/2
+          -translate-y-1/2
+          invisible
+          group-hover:visible
+        "
+      >
+        <File_DirMoreOptions />
+      </div>
     </div>
   );
 };
 
-const DirDiv = ({ directory, selectedFile, onSelect }: {
+const DirDiv = ({
+  directory,
+  selectedFile,
+  onSelect,
+}: {
   directory: Directory;
   selectedFile: File | undefined;
   onSelect: (file: File) => void;
@@ -88,7 +141,11 @@ const DirDiv = ({ directory, selectedFile, onSelect }: {
         }}
       />
       {open ? (
-        <SubTree directory={directory} selectedFile={selectedFile} onSelect={onSelect} />
+        <SubTree
+          directory={directory}
+          selectedFile={selectedFile}
+          onSelect={onSelect}
+        />
       ) : null}
     </>
   );
@@ -102,7 +159,7 @@ const isChildSelected = (directory: Directory, selectedFile: File) => {
       res = true;
       return;
     }
-    if (selectedFile.parentId === '0') {
+    if (selectedFile.parentId === "0") {
       res = false;
       return;
     }
@@ -115,11 +172,15 @@ const isChildSelected = (directory: Directory, selectedFile: File) => {
   return res;
 };
 
-const FileIcon = ({ extension, name }: { name?: string; extension?: string }) => {
+const FileIcon = ({
+  extension,
+  name,
+}: {
+  name?: string;
+  extension?: string;
+}) => {
   let icon = getIcon(extension || "", name || "");
   return (
-    <span className="flex w-8 h-8 justify-center items-center">
-      {icon}
-    </span>
+    <span className="flex w-8 h-8 justify-center items-center">{icon}</span>
   );
 };
