@@ -21,7 +21,9 @@ const extensionToLanguageMap: Record<string, string> = {
   };
   
  export  const getLanguageFromFileName = (fileName: string): string => {
+    console.log("File name: ", fileName);
     const ext = fileName.split(".").pop()?.toLowerCase() || "";
+    console.log("File extension: ", extensionToLanguageMap[ext]);
     return extensionToLanguageMap[ext] || "plaintext";
   };
   

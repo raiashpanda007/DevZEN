@@ -9,7 +9,11 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { FiMoreHorizontal } from "react-icons/fi";
-function File_DirMoreOptions() {
+import type { Directory,File } from "@workspace/ui/components/Code/FileStructure";
+function File_DirMoreOptions({directory}: {directory: Directory | File}) {
+  const handleClick = () => {
+    console.log("Clicked on: ", directory.path);
+  };
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -20,7 +24,7 @@ function File_DirMoreOptions() {
       <DropdownMenuContent className="w-56">
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={handleClick}>
             New Folder
             <DropdownMenuShortcut>⇧⌘N</DropdownMenuShortcut>
           </DropdownMenuItem>

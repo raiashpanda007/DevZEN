@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FiMoreHorizontal } from "react-icons/fi";
 import {
   Directory,
   File,
@@ -107,7 +106,7 @@ const FileDiv = ({
           group-hover:visible
         "
       >
-        <File_DirMoreOptions />
+        <File_DirMoreOptions directory={file} />
       </div>
     </div>
   );
@@ -133,6 +132,7 @@ const DirDiv = ({
         icon={open ? "openDirectory" : "closedDirectory"}
         selectedFile={selectedFile}
         onClick={() => {
+          console.log("Clicked on: ", directory.name);
           if (!open) {
             onSelect(directory);
           }
