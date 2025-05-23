@@ -106,7 +106,7 @@ const FileDiv = ({
           group-hover:visible
         "
       >
-        <File_DirMoreOptions directory={file} />
+        <File_DirMoreOptions directory={selectedFile} />
       </div>
     </div>
   );

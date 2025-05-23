@@ -37,5 +37,11 @@ export const FILE_FETCH = "file_fetch"
 export const RECEIVED_DIR_FETCH = "received_dir_fetch"
 export const RECEIVED_INIT_DIR_FETCH = "received_init_dir_fetch"
 export const RECIEVED_FILE_FETCH = "received_file_fetch"
+export const MESSAGE_CREATE_FILE = 'create_file'
+export const DELETE_FILE = 'delete_file'
+export const MESSAGE_CREATE_FOLDER = 'create_folder'
+export const MESSAGE_DELETE_FOLDER = 'delete_folder'
+export const MESSAGE_RENAME_FOLDER = 'rename_folder'
+export const MESSAGE_RENAME_FILE = 'rename_file'
 
 

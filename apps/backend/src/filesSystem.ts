@@ -60,8 +60,68 @@ export const fetchFileContent = async (file: string) => {
     });
 };
 
-export const Delete = async (key: string) => {};
-export const createNewFile = async (key: string) => {};
-export const createNewFolder = async (key: string) => {};
-export const renameFile = async (key: string, newKey: string) => {};
-export const renameFolder = async (key: string, newKey: string) => {};
+export const Delete = async (path: string) => {
+    return new Promise((resolve, reject) => {
+        fs.rm(path, { recursive: true, force: true }, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+};
+export const createNewFile = async (path: string,name:string) => {
+    return new Promise((resolve, reject) => {
+        fs.writeFile(path, name, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+
+};
+export const createNewFolder = async (path: string,name:string) => {
+    return new Promise((resolve,reject) =>{
+        fs.mkdir(path, { recursive: true }, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    })
+};
+export const renameFile = async (key: string, newName: string) => {
+    return new Promise((resolve, reject) => {
+        fs.rename(key, newName, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+};
+export const renameFolder = async (key: string, newName: string) => {
+    return new Promise((resolve, reject) => {
+        fs.rename(key, newName, (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+};
+
+
+export const CRUD_operations = {
+    createNewFile,
+    createNewFolder,
+    renameFile,
+    renameFolder,
+    Delete,
+}

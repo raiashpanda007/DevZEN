@@ -10,9 +10,9 @@ import {
 } from "@workspace/ui/components/dropdown-menu";
 import { FiMoreHorizontal } from "react-icons/fi";
 import type { Directory,File } from "@workspace/ui/components/Code/FileStructure";
-function File_DirMoreOptions({directory}: {directory: Directory | File}) {
+function File_DirMoreOptions({directory}: {directory: File | undefined}) {
   const handleClick = () => {
-    console.log("Clicked on: ", directory.path);
+    console.log("Clicked on: ", directory?.path);
   };
   return (
     <DropdownMenu>

@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH,RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH } from "@workspace/types";
+import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH, MESSAGE_CREATE_FILE, MESSAGE_CREATE_FOLDER, MESSAGE_DELETE_FOLDER, MESSAGE_RENAME_FILE, MESSAGE_RENAME_FOLDER } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -25,16 +25,16 @@ wss.on("connection", (ws) => {
                     }
                     await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
                     const dirs = await fetchAllDirs(`/workspace/${projectId}`);
-                    ws.send(JSON.stringify({ 
-                        type: RECEIVED_INIT_DIR_FETCH, 
-                        payload: {dirs }
+                    ws.send(JSON.stringify({
+                        type: RECEIVED_INIT_DIR_FETCH,
+                        payload: { dirs }
                     }));
                     break;
                 }
 
                 case DIR_FETCH: {
                     const { dir } = message.payload;
-                    
+
                     const dirs = await fetchAllDirs(`/workspace/${dir}`);
                     ws.send(JSON.stringify({ type: RECEIVED_DIR_FETCH, payload: dirs }));
                     break;
@@ -43,27 +43,100 @@ wss.on("connection", (ws) => {
                 case FILE_FETCH: {
                     const filePath = message.payload.path;
                     if (!filePath) {
-                        ws.send(JSON.stringify({ type: "error", payload: { message: "Improper file path" }}));
+                        ws.send(JSON.stringify({ type: "error", payload: { message: "Improper file path" } }));
                         return;
                     }
                     const content = await fetchFileContent(`./${filePath}`);
                     if (!content) {
-                        ws.send(JSON.stringify({ type: "Failure", payload: { message: "File not found" }}));
+                        ws.send(JSON.stringify({ type: "Failure", payload: { message: "File not found" } }));
                         return;
                     }
 
                     console.log("File content:", content);
 
-                    ws.send(JSON.stringify({ 
-                        type: RECIEVED_FILE_FETCH, 
+                    ws.send(JSON.stringify({
+                        type: RECIEVED_FILE_FETCH,
                         payload: { message: "File fetched successfully", content }
                     }));
                     break;
                 }
+                case MESSAGE_CREATE_FILE: {
+                    console.log("Creating file");
+                    const { path, name } = message.payload;
+                    if (!path || !name) {
+                        ws.send(JSON.stringify({ type: "error", payload: "File name and parent ID are required to create a new file" }));
 
-                default:
+                        return;
+                    }
+                    await CRUD_operations.createNewFile(path, name);
+                    ws.send(JSON.stringify({
+                        type: "success",
+                        payload: { message: "File created successfully" }
+                    }));
+                    break;
+                }
+                case MESSAGE_CREATE_FOLDER: {
+                    console.log("Creating folder");
+                    const { path, name } = message.payload;
+                    if (!path || !name) {
+                        ws.send(JSON.stringify({ type: "error", payload: "Folder name and parent ID are required to create a new folder" }));
+                        return;
+                    }
+                    await CRUD_operations.createNewFolder(path, name);
+                    ws.send(JSON.stringify({
+                        type: "success",
+                        payload: { message: "Folder created successfully" }
+                    }));
+                    break;
+                }
+
+                case MESSAGE_DELETE_FOLDER: {
+                    console.log("Deleting folder");
+                    const { path } = message.payload;
+                    if (!path) {
+                        ws.send(JSON.stringify({ type: "error", payload: "Folder path is required to delete a folder" }));
+                        return;
+                    }
+                    await CRUD_operations.Delete(path);
+                    ws.send(JSON.stringify({
+                        type: "success",
+                        payload: { message: "Folder deleted successfully" } 
+                    }));
+                    break;
+                }
+                case MESSAGE_RENAME_FOLDER: {
+                    console.log("Renaming folder");
+                    const { path, newName } = message.payload;
+                    if (!path || !newName) {
+                        ws.send(JSON.stringify({ type: "error", payload: "Folder path and new name are required to rename a folder" }));
+                        return;
+                    }
+                    await CRUD_operations.renameFolder(path, newName);
+                    ws.send(JSON.stringify({
+                        type: "success",
+                        payload: { message: "Folder renamed successfully" }
+                    }));
+                    break;
+                }
+
+                case MESSAGE_RENAME_FILE: {
+                    console.log("Renaming file");
+                    const { path, newName } = message.payload;
+                    if (!path || !newName) {
+                        ws.send(JSON.stringify({ type: "error", payload: "File path and new name are required to rename a file" }));
+                        return;
+                    }
+                    await CRUD_operations.renameFile(path, newName);
+                    ws.send(JSON.stringify({
+                        type: "success",    
+                        payload: { message: "File renamed successfully" }
+                    }));
+                    break;
+                }
+                default: {
                     ws.send(JSON.stringify({ type: "error", payload: "Unknown message type" }));
                     break;
+                }
             }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);
