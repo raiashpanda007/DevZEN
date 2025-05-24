@@ -38,13 +38,13 @@ function Sidebar(
       else if (data.type === RECIEVED_FILE_FETCH) {
         console.log("Received file content")
         setSelectedFile((prev) => {
-          if (!prev) return undefined; // Ensure `prev` is defined
+          if (!prev) return undefined;
           return {
             ...prev,
             content: data.payload.content,
           };
         });
-        console.log(selectedFile?.content)
+        
       }
     };
 

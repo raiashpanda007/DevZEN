@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH, MESSAGE_CREATE_FILE, MESSAGE_CREATE_FOLDER, MESSAGE_DELETE_FOLDER, MESSAGE_RENAME_FILE, MESSAGE_RENAME_FOLDER } from "@workspace/types";
+import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH, MESSAGE_CREATE_FILE, MESSAGE_CREATE_FOLDER, MESSAGE_DELETE_FOLDER, MESSAGE_RENAME_FILE, MESSAGE_RENAME_FOLDER, MESSAGE_DELETE_FILE } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
 
@@ -42,6 +42,7 @@ wss.on("connection", (ws) => {
 
                 case FILE_FETCH: {
                     const filePath = message.payload.path;
+                    console.log("Fetching file content for path:", filePath);
                     if (!filePath) {
                         ws.send(JSON.stringify({ type: "error", payload: { message: "Improper file path" } }));
                         return;
@@ -89,7 +90,20 @@ wss.on("connection", (ws) => {
                     }));
                     break;
                 }
-
+                case MESSAGE_DELETE_FILE: {
+                    console.log("Deleting file");
+                    const { path } = message.payload;
+                    if (!path) {
+                        ws.send(JSON.stringify({ type: "error", payload: "File path is required to delete a file" }));
+                        return;
+                    }
+                    await CRUD_operations.Delete(path);
+                    ws.send(JSON.stringify({
+                        type: "success",
+                        payload: { message: "File deleted successfully" }
+                    }));
+                    break;
+                }
                 case MESSAGE_DELETE_FOLDER: {
                     console.log("Deleting folder");
                     const { path } = message.payload;

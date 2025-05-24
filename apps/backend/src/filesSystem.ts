@@ -7,9 +7,11 @@ export interface RemoteFile {
     path: string;
 }
 
+const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
+
 export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     return new Promise((resolve, reject) => {
-        const absolutePath = path.join('/home/ashwin-rai/Projects/DevZen/apps/backend', dir);
+        const absolutePath = path.join(homeDir, dir);
         console.log("Resolved path:", absolutePath);
 
         fs.readdir(absolutePath, { withFileTypes: true }, async (err, dirents) => {
@@ -49,11 +51,13 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
 
 export const fetchFileContent = async (file: string) => {
     
+    
     return new Promise((resolve, reject) => {
         fs.readFile(file, "utf8", (err, data) => {
             if (err) {
                 reject(err);
             } else {
+                
                 resolve(data);
             }
         });
@@ -61,8 +65,9 @@ export const fetchFileContent = async (file: string) => {
 };
 
 export const Delete = async (path: string) => {
+    const aboslutePath = homeDir+path;
     return new Promise((resolve, reject) => {
-        fs.rm(path, { recursive: true, force: true }, (err) => {
+        fs.rm(aboslutePath, { recursive: true, force: true }, (err) => {
             if (err) {
                 reject(err);
             } else {
@@ -72,8 +77,11 @@ export const Delete = async (path: string) => {
     });
 };
 export const createNewFile = async (path: string,name:string) => {
+    console.log("Creating file at path:", path);
+    console.log("File name:", name);
+    const absolutePath = homeDir + path+'/'+name;
     return new Promise((resolve, reject) => {
-        fs.writeFile(path, name, (err) => {
+        fs.writeFile(absolutePath, "", (err) => {
             if (err) {
                 reject(err);
             } else {
@@ -85,7 +93,8 @@ export const createNewFile = async (path: string,name:string) => {
 };
 export const createNewFolder = async (path: string,name:string) => {
     return new Promise((resolve,reject) =>{
-        fs.mkdir(path, { recursive: true }, (err) => {
+        const aboslutePath = homeDir+path+'/'+name;
+        fs.mkdir(aboslutePath, { recursive: true }, (err) => {
             if (err) {
                 reject(err);
             } else {
@@ -95,6 +104,8 @@ export const createNewFolder = async (path: string,name:string) => {
     })
 };
 export const renameFile = async (key: string, newName: string) => {
+    const absolutePath = homeDir + key;
+    const newNamePath = path.join(path.dirname(absolutePath), newName);
     return new Promise((resolve, reject) => {
         fs.rename(key, newName, (err) => {
             if (err) {
@@ -106,8 +117,10 @@ export const renameFile = async (key: string, newName: string) => {
     });
 };
 export const renameFolder = async (key: string, newName: string) => {
+    const absolutePath = homeDir + key;
+    const newAboslutePath = path.join(path.dirname(absolutePath), newName);
     return new Promise((resolve, reject) => {
-        fs.rename(key, newName, (err) => {
+        fs.rename(absolutePath, newAboslutePath, (err) => {
             if (err) {
                 reject(err);
             } else {
