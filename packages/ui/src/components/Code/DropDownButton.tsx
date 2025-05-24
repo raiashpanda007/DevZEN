@@ -1,3 +1,4 @@
+"use client"
 import { Button } from "@workspace/ui/components/button";
 import {
   DropdownMenu,
@@ -9,11 +10,15 @@ import {
   DropdownMenuTrigger,
 } from "@workspace/ui/components/dropdown-menu";
 import { FiMoreHorizontal } from "react-icons/fi";
+import { useState } from "react";
 import type { Directory,File } from "@workspace/ui/components/Code/FileStructure";
-function File_DirMoreOptions({directory}: {directory: File | undefined}) {
+function File_DirMoreOptions({directory,socket,dialogOpen,setDialogOpen}: {directory: File | undefined,socket: WebSocket | null,dialogOpen: boolean,setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>}) {
   const handleClick = () => {
-    console.log("Clicked on: ", directory?.path);
+    setDialogOpen(prev => !prev);
   };
+  
+
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

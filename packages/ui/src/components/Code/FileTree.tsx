@@ -12,6 +12,9 @@ interface FileTreeProps {
   rootDir: Directory;
   selectedFile: File | undefined;
   onSelect: (file: File) => void;
+  socket:WebSocket | null;
+  dialogOpen: boolean;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const FileTree = (props: FileTreeProps) => {
@@ -26,6 +29,10 @@ interface SubTreeProps {
   directory: Directory;
   selectedFile: File | undefined;
   onSelect: (file: File) => void;
+  socket: WebSocket | null;
+  dialogOpen: boolean;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+
 }
 
 const SubTree = (props: SubTreeProps) => {
@@ -37,6 +44,9 @@ const SubTree = (props: SubTreeProps) => {
             directory={dir}
             selectedFile={props.selectedFile}
             onSelect={props.onSelect}
+            socket={props.socket}
+            dialogOpen={props.dialogOpen}
+            setDialogOpen={props.setDialogOpen}
           />
         </React.Fragment>
       ))}
@@ -46,6 +56,9 @@ const SubTree = (props: SubTreeProps) => {
             file={file}
             selectedFile={props.selectedFile}
             onClick={() => props.onSelect(file)}
+            socket ={props.socket}
+            dialogOpen={props.dialogOpen}
+            setDialogOpen={props.setDialogOpen}
           />
         </React.Fragment>
       ))}
@@ -58,11 +71,17 @@ const FileDiv = ({
   icon,
   selectedFile,
   onClick,
+  socket,
+  dialogOpen,
+  setDialogOpen
 }: {
   file: File | Directory;
   icon?: string;
   selectedFile: File | undefined;
   onClick: () => void;
+  socket: WebSocket | null;
+  dialogOpen: boolean;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const isSelected = selectedFile?.id === file.id;
   const depth = file.depth;
@@ -106,7 +125,7 @@ const FileDiv = ({
           group-hover:visible
         "
       >
-        <File_DirMoreOptions directory={selectedFile} />
+        <File_DirMoreOptions directory={selectedFile} socket={socket} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen}/>
       </div>
     </div>
   );
@@ -116,10 +135,16 @@ const DirDiv = ({
   directory,
   selectedFile,
   onSelect,
+  socket,
+  dialogOpen,
+  setDialogOpen,
 }: {
   directory: Directory;
   selectedFile: File | undefined;
   onSelect: (file: File) => void;
+  socket: WebSocket | null;
+  dialogOpen: boolean;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   let defaultOpen = false;
   if (selectedFile) defaultOpen = isChildSelected(directory, selectedFile);
@@ -138,12 +163,18 @@ const DirDiv = ({
           }
           setOpen(!open);
         }}
+        socket = {socket}
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
       />
       {open ? (
         <SubTree
           directory={directory}
           selectedFile={selectedFile}
           onSelect={onSelect}
+          socket = {socket}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
         />
       ) : null}
     </>

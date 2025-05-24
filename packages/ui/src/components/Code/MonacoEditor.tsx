@@ -13,6 +13,7 @@ import { getLanguageFromFileName } from "@workspace/ui/lib/getLanguagefromName";
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
+  
 }
 
 const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
