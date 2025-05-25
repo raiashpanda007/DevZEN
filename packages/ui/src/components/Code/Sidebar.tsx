@@ -1,6 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
-import { useSocket } from "@workspace/ui/hooks/useSocket";
+import React, { use, useEffect, useState } from "react";
 import {
   Directory,
   RemoteFile,
@@ -8,8 +7,8 @@ import {
 } from "@workspace/ui/components/Code/FileStructure";
 import { FileTree } from "@workspace/ui/components/Code/FileTree";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
-import type { File as FileTypes } from "@workspace/types";
-import { RECIEVED_FILE_FETCH } from "@workspace/types";
+import  { File as FileTypes } from "@workspace/types";
+import { Messages } from "@workspace/types";
 
 interface SidebarProps {
   selectedFile: FileTypes | undefined;
@@ -17,7 +16,8 @@ interface SidebarProps {
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string>>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
+  socket: WebSocket | null;
 }
 
 function Sidebar({
@@ -27,9 +27,13 @@ function Sidebar({
   setDialogOpen,
   setTypeDialog,
   setPath,
+  socket,
 }: SidebarProps) {
-  const { socket } = useSocket("ws://localhost:8080");
   const [rootDir, setRootDir] = useState<Directory | null>(null);
+  const RECIEVED_FILE_FETCH = Messages.RECIEVED_FILE_FETCH;
+  useEffect(() => {
+    if (!socket) return;
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -71,6 +75,7 @@ function Sidebar({
         path: selectedFile ? selectedFile.path : "",
       },
     };
+
     socket.send(JSON.stringify(fileFetchMessage));
   }, [selectedFile?.path]);
 
@@ -92,7 +97,9 @@ function Sidebar({
           setPath={setPath}
         />
       ) : (
-        <div>Loading files...</div>
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-t-transparent dark:border-t-transparent border-black dark:border-white rounded-full animate-spin "></div>
+        </div>
       )}
     </ScrollArea>
   );

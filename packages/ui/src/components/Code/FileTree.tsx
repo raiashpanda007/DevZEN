@@ -7,6 +7,7 @@ import {
 } from "@workspace/ui/components/Code/FileStructure";
 import { getIcon } from "@workspace/ui/components/Code/Icons";
 import File_DirMoreOptions from "@workspace/ui/components/Code/DropDownButton";
+import type {File as FileTypes} from "@workspace/types";
 
 interface FileTreeProps {
   rootDir: Directory;
@@ -16,7 +17,7 @@ interface FileTreeProps {
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
 }
 
 export const FileTree = (props: FileTreeProps) => {
@@ -35,7 +36,7 @@ interface SubTreeProps {
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<File | undefined>>;
 
 }
 
@@ -94,7 +95,7 @@ const FileDiv = ({
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<File | undefined>>;
 }) => {
   const isSelected = selectedFile?.id === file.id;
   const depth = file.depth;
@@ -161,7 +162,7 @@ const DirDiv = ({
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<File | undefined>>;
 }) => {
   let defaultOpen = false;
   if (selectedFile) defaultOpen = isChildSelected(directory, selectedFile);

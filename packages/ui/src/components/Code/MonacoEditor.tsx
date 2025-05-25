@@ -23,14 +23,12 @@ const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
   const currTheme = useTheme().theme;
 
   useEffect(() => {
-    // Initialize Monaco loader
     (loader as any ).init().then((monaco: typeof import("monaco-editor")) => {
       monacoRef.current = monaco;
     });
   }, []);
 
   useEffect(() => {
-    // Switch Monaco theme based on system theme
     setTheme(currTheme === "dark" ? "vs-dark" : "vs-light");
   }, [currTheme]);
 
@@ -61,7 +59,7 @@ const MonacoEditor = ({ selectedFile, setSelectedFile }: MonacoEditorProps) => {
       editorRef.current.setModel(model);
     }
 
-    // Set TypeScript options only when needed
+    
     if (language === "typescript" || language === "javascript") {
       monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: true,

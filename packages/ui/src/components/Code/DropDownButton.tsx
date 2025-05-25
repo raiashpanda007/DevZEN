@@ -29,15 +29,16 @@ function File_DirMoreOptions({
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setDialogType: React.Dispatch<React.SetStateAction<string>>;
-  setPath: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<File| undefined>>;
 }) {
   const handleClick = (type: string , directory:File|undefined) => {
+    console.log("Clicked:", type, "on directory:", directory);
     setDialogOpen((prev) => !prev);
     setDialogType(type);
     if (directory) {
-      setPath(directory.path);
+      setPath(directory);
     } else {
-      setPath("");
+      setPath(undefined);
     }
   };
 
