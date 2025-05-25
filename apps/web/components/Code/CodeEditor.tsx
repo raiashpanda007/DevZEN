@@ -28,28 +28,27 @@ function CodeEditor() {
 
   const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [typeDialog, setTypeDialog] = useState<string>("");
+  const [path, setPath] = useState<string>("");
   return (
-    <>
-      {dialogOpen ? (
-        (console.log("Dialog Open"), (<DialogBox loaderState={dialogOpen} />))
-      ) : (
-        <div className="w-full h-full flex overflow-hidden">
-          <Sidebar
-            selectedFile={selectedFile}
-            setSelectedFile={setSelectedFile}
-            dialogOpen={dialogOpen}
-            setDialogOpen={setDialogOpen}
-          />
+    <div className="w-full h-full flex overflow-hidden">
+      {dialogOpen && <DialogBox loaderState={dialogOpen} type={typeDialog} setLoaderState={setDialogOpen} path={path}/>}
+      <Sidebar
+        selectedFile={selectedFile}
+        setSelectedFile={setSelectedFile}
+        dialogOpen={dialogOpen}
+        setDialogOpen={setDialogOpen}
+        setTypeDialog={setTypeDialog}
+        setPath = {setPath}
+      />
 
-          <div className="w-5/6 h-full">
-            <MonacoEditor
-              selectedFile={selectedFile}
-              setSelectedFile={setSelectedFile}
-            />
-          </div>
-        </div>
-      )}
-    </>
+      <div className="w-5/6 h-full">
+        <MonacoEditor
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+        />
+      </div>
+    </div>
   );
 }
 

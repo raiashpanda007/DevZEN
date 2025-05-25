@@ -16,6 +16,8 @@ interface SidebarProps {
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTypeDialog: React.Dispatch<React.SetStateAction<string>>;
+  setPath: React.Dispatch<React.SetStateAction<string>>;
 }
 
 function Sidebar({
@@ -23,6 +25,8 @@ function Sidebar({
   setSelectedFile,
   dialogOpen,
   setDialogOpen,
+  setTypeDialog,
+  setPath,
 }: SidebarProps) {
   const { socket } = useSocket("ws://localhost:8080");
   const [rootDir, setRootDir] = useState<Directory | null>(null);
@@ -84,6 +88,8 @@ function Sidebar({
           socket={socket}
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
+          setTypeDialog={setTypeDialog}
+          setPath={setPath}
         />
       ) : (
         <div>Loading files...</div>

@@ -15,6 +15,8 @@ interface FileTreeProps {
   socket:WebSocket | null;
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
+  setPath: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export const FileTree = (props: FileTreeProps) => {
@@ -32,6 +34,8 @@ interface SubTreeProps {
   socket: WebSocket | null;
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
+  setPath: React.Dispatch<React.SetStateAction<string>>;
 
 }
 
@@ -47,6 +51,8 @@ const SubTree = (props: SubTreeProps) => {
             socket={props.socket}
             dialogOpen={props.dialogOpen}
             setDialogOpen={props.setDialogOpen}
+            setTypeDialog={props.setTypeDialog}
+            setPath={props.setPath}
           />
         </React.Fragment>
       ))}
@@ -59,6 +65,9 @@ const SubTree = (props: SubTreeProps) => {
             socket ={props.socket}
             dialogOpen={props.dialogOpen}
             setDialogOpen={props.setDialogOpen}
+            setTypeDialog={props.setTypeDialog}
+            setPath={props.setPath}
+
           />
         </React.Fragment>
       ))}
@@ -73,7 +82,9 @@ const FileDiv = ({
   onClick,
   socket,
   dialogOpen,
-  setDialogOpen
+  setDialogOpen,
+  setTypeDialog,
+  setPath
 }: {
   file: File | Directory;
   icon?: string;
@@ -82,6 +93,8 @@ const FileDiv = ({
   socket: WebSocket | null;
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
+  setPath: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   const isSelected = selectedFile?.id === file.id;
   const depth = file.depth;
@@ -125,7 +138,7 @@ const FileDiv = ({
           group-hover:visible
         "
       >
-        <File_DirMoreOptions directory={selectedFile} socket={socket} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen}/>
+        <File_DirMoreOptions directory={selectedFile} socket={socket} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} setDialogType={setTypeDialog} setPath={setPath}/>
       </div>
     </div>
   );
@@ -138,6 +151,8 @@ const DirDiv = ({
   socket,
   dialogOpen,
   setDialogOpen,
+  setTypeDialog,
+  setPath
 }: {
   directory: Directory;
   selectedFile: File | undefined;
@@ -145,6 +160,8 @@ const DirDiv = ({
   socket: WebSocket | null;
   dialogOpen: boolean;
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
+  setPath: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   let defaultOpen = false;
   if (selectedFile) defaultOpen = isChildSelected(directory, selectedFile);
@@ -166,6 +183,8 @@ const DirDiv = ({
         socket = {socket}
         dialogOpen={dialogOpen}
         setDialogOpen={setDialogOpen}
+        setTypeDialog={setTypeDialog}
+        setPath={setPath}
       />
       {open ? (
         <SubTree
@@ -175,6 +194,8 @@ const DirDiv = ({
           socket = {socket}
           dialogOpen={dialogOpen}
           setDialogOpen={setDialogOpen}
+          setTypeDialog={setTypeDialog}
+          setPath={setPath}
         />
       ) : null}
     </>
