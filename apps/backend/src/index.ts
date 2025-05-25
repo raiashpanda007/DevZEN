@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH, RECIEVED_FILE_FETCH, RECEIVED_INIT_DIR_FETCH, RECEIVED_DIR_FETCH, MESSAGE_CREATE_FILE, MESSAGE_CREATE_FOLDER, MESSAGE_DELETE_FOLDER, MESSAGE_RENAME_FILE, MESSAGE_RENAME_FOLDER, MESSAGE_DELETE_FILE } from "@workspace/types";
+import { Messages } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
 
@@ -7,6 +7,20 @@ const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
 
 wss.on("connection", (ws) => {
+    const {
+        MESSAGE_INIT,
+        DIR_FETCH,
+        FILE_FETCH,
+        RECEIVED_DIR_FETCH,
+        RECEIVED_INIT_DIR_FETCH,
+        RECIEVED_FILE_FETCH,
+        MESSAGE_CREATE_FILE,
+        MESSAGE_DELETE_FILE,
+        MESSAGE_CREATE_FOLDER,
+        MESSAGE_DELETE_FOLDER,
+        MESSAGE_RENAME_FOLDER,
+        MESSAGE_RENAME_FILE
+    } = Messages;
     console.log("New WebSocket connection established");
 
     ws.send(JSON.stringify({ type: "connected", payload: "WebSocket connection established" }));
@@ -120,12 +134,12 @@ wss.on("connection", (ws) => {
                 }
                 case MESSAGE_RENAME_FOLDER: {
                     console.log("Renaming folder");
-                    const { path, newName } = message.payload;
-                    if (!path || !newName) {
+                    const { path, name } = message.payload;
+                    if (!path || !name) {
                         ws.send(JSON.stringify({ type: "error", payload: "Folder path and new name are required to rename a folder" }));
                         return;
                     }
-                    await CRUD_operations.renameFolder(path, newName);
+                    await CRUD_operations.renameFolder(path, name);
                     ws.send(JSON.stringify({
                         type: "success",
                         payload: { message: "Folder renamed successfully" }
@@ -135,12 +149,12 @@ wss.on("connection", (ws) => {
 
                 case MESSAGE_RENAME_FILE: {
                     console.log("Renaming file");
-                    const { path, newName } = message.payload;
-                    if (!path || !newName) {
+                    const { path, name } = message.payload;
+                    if (!path || !name) {
                         ws.send(JSON.stringify({ type: "error", payload: "File path and new name are required to rename a file" }));
                         return;
                     }
-                    await CRUD_operations.renameFile(path, newName);
+                    await CRUD_operations.renameFile(path, name);
                     ws.send(JSON.stringify({
                         type: "success",    
                         payload: { message: "File renamed successfully" }

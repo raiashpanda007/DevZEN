@@ -30,6 +30,6 @@ export interface File extends CommonProps{}
 
 
 // Export all named exports from MESSAGE_TYPES as named exports
-export * from "./Messages";
+export {Messages} from "./Messages";
 
 

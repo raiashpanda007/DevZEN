@@ -1,8 +1,9 @@
 import {useState, useEffect} from 'react';
-import { DIR_FETCH, MESSAGE_INIT, FILE_FETCH } from "@workspace/types";
+import { Messages } from "@workspace/types";
 import { useParams } from 'next/navigation.js';
 
 export const useSocket = (url: string) => {
+    const {MESSAGE_INIT} = Messages;
     const { project } = useParams();
     const [socket, setSocket] = useState<WebSocket | null>(null);
     
