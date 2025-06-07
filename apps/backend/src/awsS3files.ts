@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand,DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand,DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import path from "path";
 
@@ -140,4 +140,51 @@ export async function delete_folder_file_s3(key: string) {
     }
 }
 
+
+
+export async function rename_folder_file_s3(oldPrefix: string, newPrefix: string) {
+  try {
+    const listedObjects = await s3.send(
+      new ListObjectsV2Command({
+        Bucket: AWS_S3_BUCKET_NAME,
+        Prefix: oldPrefix
+      })
+    );
+
+    if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
+      throw new Error(`No objects found with prefix ${oldPrefix}`);
+    }
+
+    
+    for (const object of listedObjects.Contents) {
+      if (!object.Key) continue;
+
+      const newKey = object.Key.replace(oldPrefix, newPrefix);
+      await s3.send(
+        new CopyObjectCommand({
+          Bucket: AWS_S3_BUCKET_NAME,
+          CopySource: `${AWS_S3_BUCKET_NAME}/${object.Key}`,
+          Key: newKey
+        })
+      );
+    }
+
+    
+    for (const object of listedObjects.Contents) {
+      if (!object.Key) continue;
+
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: AWS_S3_BUCKET_NAME,
+          Key: object.Key
+        })
+      );
+    }
+
+    console.log(`✅ Renamed S3 folder from ${oldPrefix} to ${newPrefix}`);
+  } catch (error) {
+    console.error("❌ Error renaming folder/file in S3:", error);
+    throw error;
+  }
+}
 

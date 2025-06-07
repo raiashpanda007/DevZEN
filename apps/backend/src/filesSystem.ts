@@ -6,7 +6,7 @@ export interface RemoteFile {
     name: string;
     path: string;
 }
-import { create_folder_file_s3,delete_folder_file_s3 } from './awsS3files';
+import { create_folder_file_s3,delete_folder_file_s3, rename_folder_file_s3 } from './awsS3files';
 
 const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
 
@@ -112,6 +112,12 @@ export const createNewFolder = async (path: string, name: string) => {
     })
 };
 export const renameFile = async (key: string, newName: string) => {
+    const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''));
+    const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
+
+    const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName);
+    await rename_folder_file_s3(oldCloudPath, newCloudPath);
+    
     const absolutePath = homeDir + key;
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
     console.log("Renaming file from:", absolutePath, "to:", newNamePath);
@@ -127,6 +133,13 @@ export const renameFile = async (key: string, newName: string) => {
 };
 
 export const renameFolder = async (key: string, newName: string) => {
+    const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''),  '/');
+    const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
+
+    const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName, '/');
+    await rename_folder_file_s3(oldCloudPath, newCloudPath);
+    console.log("Renaming folder in S3 from:", oldCloudPath, "to:", newCloudPath);
+
     const absolutePath = p.join(homeDir, key);
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
     console.log("Renaming Folder from:", absolutePath, "to:", newNamePath);
