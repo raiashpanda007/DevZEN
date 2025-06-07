@@ -15,7 +15,11 @@ import { FiMoreHorizontal } from "react-icons/fi";
 import type {
   Directory,
   File,
+ 
 } from "@workspace/ui/components/Code/FileStructure";
+import { Type } from "@workspace/ui/components/Code/FileStructure";
+
+
 function File_DirMoreOptions({
   directory,
   socket,
@@ -52,14 +56,18 @@ function File_DirMoreOptions({
       <DropdownMenuContent className="w-56">
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => handleClick("Create Directory",directory)}>
+          {
+             directory?.type === Type.DIRECTORY ? (<DropdownMenuItem onClick={() => handleClick("Create Directory",directory)}>
             New Folder
             <DropdownMenuShortcut>⇧⌘N</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleClick("Create File",directory)}>
+          </DropdownMenuItem>) : null
+          }
+          {
+            directory?.type === Type.DIRECTORY ? (<DropdownMenuItem onClick={() => handleClick("Create File",directory)}>
             New File
-            <DropdownMenuShortcut>⇧⌘N</DropdownMenuShortcut>
-          </DropdownMenuItem>
+            <DropdownMenuShortcut>⇧⌘F</DropdownMenuShortcut>
+          </DropdownMenuItem>) : null
+          }
           <DropdownMenuItem onClick={() => handleClick("Rename",directory)}>
             Rename
             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
@@ -71,10 +79,7 @@ function File_DirMoreOptions({
             Delete
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            Keyboard shortcuts
-            <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
       </DropdownMenuContent>

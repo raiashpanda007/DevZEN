@@ -106,6 +106,7 @@ wss.on("connection", (ws) => {
                 }
                 case MESSAGE_DELETE_FILE: {
                     console.log("Deleting file");
+                    console.log(message)
                     const { path } = message.payload;
                     if (!path) {
                         ws.send(JSON.stringify({ type: "error", payload: "File path is required to delete a file" }));
@@ -120,6 +121,7 @@ wss.on("connection", (ws) => {
                 }
                 case MESSAGE_DELETE_FOLDER: {
                     console.log("Deleting folder");
+                    console.log(message)
                     const { path } = message.payload;
                     if (!path) {
                         ws.send(JSON.stringify({ type: "error", payload: "Folder path is required to delete a folder" }));

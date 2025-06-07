@@ -10,7 +10,7 @@ const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || "";
 const AWS_S3_ACCESS_KEY = process.env.AWS_S3_ACCESS_KEY || "";
 const AWS_S3_SECRET_KEY = process.env.AWS_S3_SECRET_KEY || "";
 
-const s3 = new S3Client({  
+const s3 = new S3Client({
     region: AWS_S3_REGION,
     credentials: {
         accessKeyId: AWS_S3_ACCESS_KEY,
@@ -30,7 +30,7 @@ export const getRootFilesandFolders = async (key: string, localPath: string) => 
         }
 
         for (const file of data.Contents) {
-            if (!file.Key) continue; 
+            if (!file.Key) continue;
 
             const getObjectParams = { Bucket: AWS_S3_BUCKET_NAME, Key: file.Key };
             const getObjectCommand = new GetObjectCommand(getObjectParams);
@@ -41,16 +41,16 @@ export const getRootFilesandFolders = async (key: string, localPath: string) => 
                 continue;
             }
 
-            
+
             const fileBuffer = await streamToBuffer(objectData.Body as any);
 
-            
+
             const filePath = path.join(localPath, file.Key.replace(key, ""));
 
-           
+
             await writeFile(filePath, fileBuffer);
             console.log(`✅ Downloaded: ${file.Key} -> ${filePath}`);
-            
+
         }
     } catch (error) {
         console.error("❌ Error fetching S3 files:", error);
@@ -81,7 +81,7 @@ function writeFile(filePath: string, fileData: Buffer): Promise<void> {
 }
 
 
-function createFolder(dirName: string): Promise<void> {
+export function createFolder(dirName: string): Promise<void> {
     return new Promise((resolve, reject) => {
         fs.mkdir(dirName, { recursive: true }, (err) => {
             if (err) {
@@ -92,7 +92,7 @@ function createFolder(dirName: string): Promise<void> {
     });
 }
 
-export const saveTheFile = async (key:string, filePath: string,content:string) => {
+export const saveTheFile = async (key: string, filePath: string, content: string) => {
     const params = {
         Bucket: AWS_S3_BUCKET_NAME,
         Key: key,
@@ -103,6 +103,25 @@ export const saveTheFile = async (key:string, filePath: string,content:string) =
         console.log("✅ File saved to S3:", key);
     } catch (error) {
         console.error("❌ Error saving file to S3:", error);
+    }
+}
+
+
+export async function create_folder_file_s3(key: string) {
+    try {
+        const command = new PutObjectCommand(
+            {
+                Bucket: AWS_S3_BUCKET_NAME,
+                Key: key,
+                Body: "",
+            }
+
+        )
+
+        await s3.send(command);
+        console.log("✅ Folder/file created in S3:", key);
+    } catch (error) {
+        console.error("❌ Error creating folder/file in S3:", error);
     }
 }
 
