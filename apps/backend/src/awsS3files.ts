@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand,DeleteObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import path from "path";
 
@@ -122,6 +122,21 @@ export async function create_folder_file_s3(key: string) {
         console.log("✅ Folder/file created in S3:", key);
     } catch (error) {
         console.error("❌ Error creating folder/file in S3:", error);
+    }
+}
+
+
+export async function delete_folder_file_s3(key: string) {
+    try {
+        const command = new DeleteObjectCommand({
+            Bucket: AWS_S3_BUCKET_NAME,
+            Key: key,
+        });
+
+        await s3.send(command);
+        console.log("✅ Folder/file deleted from S3:", key);
+    } catch (error) {
+        console.error("❌ Error deleting folder/file from S3:", error);
     }
 }
 

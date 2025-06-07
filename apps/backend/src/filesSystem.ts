@@ -6,7 +6,7 @@ export interface RemoteFile {
     name: string;
     path: string;
 }
-import { create_folder_file_s3 } from './awsS3files';
+import { create_folder_file_s3,delete_folder_file_s3 } from './awsS3files';
 
 const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
 
@@ -67,6 +67,9 @@ export const fetchFileContent = async (file: string) => {
 
 export const Delete = async (path: string) => {
     const aboslutePath = homeDir + path;
+    const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''));
+
+    await delete_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
         fs.rm(aboslutePath, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -94,7 +97,10 @@ export const createNewFile = async (path: string, name: string) => {
 
 };
 export const createNewFolder = async (path: string, name: string) => {
+    const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name ,'/');
+    await create_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
+
         const aboslutePath = homeDir + path + '/' + name;
         fs.mkdir(aboslutePath, { recursive: true }, (err) => {
             if (err) {

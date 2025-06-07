@@ -106,13 +106,14 @@ wss.on("connection", (ws) => {
                 }
                 case MESSAGE_DELETE_FILE: {
                     console.log("Deleting file");
-                    console.log(message)
+                    
                     const { path } = message.payload;
                     if (!path) {
                         ws.send(JSON.stringify({ type: "error", payload: "File path is required to delete a file" }));
                         return;
                     }
-                    await CRUD_operations.Delete(path);
+                    const NewPath = path.endsWith("/") ? path.slice(0, -1) : path; 
+                    await CRUD_operations.Delete(NewPath);
                     ws.send(JSON.stringify({
                         type: "success",
                         payload: { message: "File deleted successfully" }
@@ -127,7 +128,8 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: "Folder path is required to delete a folder" }));
                         return;
                     }
-                    await CRUD_operations.Delete(path);
+                    const NewPath = path.endsWith("/") ? path : `${path}/`; 
+                    await CRUD_operations.Delete(NewPath);
                     ws.send(JSON.stringify({
                         type: "success",
                         payload: { message: "Folder deleted successfully" } 
