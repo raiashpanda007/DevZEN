@@ -1,32 +1,131 @@
-# shadcn/ui monorepo template
+# 🚀 DevZEN
 
-This template is for creating a monorepo with shadcn/ui.
+> **Cloud-native collaborative IDE with AI assistance, real-time coding, and VS Code experience in the browser.**
 
-## Usage
+![Monaco Editor](https://img.shields.io/badge/Editor-Monaco-blue) ![Turborepo](https://img.shields.io/badge/Monorepo-Turborepo-green) ![Status](https://img.shields.io/badge/Status-Actively%20Building-yellow)
 
+---
+
+## 🧠 What is DevZEN?
+
+**DevZEN** is a browser-based IDE designed for real-world development workflows.  
+It brings real-time collaboration, a smart AI assistant, and full-stack coding power into a single cloud-native developer workspace.
+
+Built on top of **Monaco Editor**, **Next.js**, and **Turborepo**, with powerful backend architecture and terminal support.
+
+---
+
+## 📦 Monorepo Structure (Turborepo)
+
+devzen/
+├── apps/
+│ ├── web/ # Next.js frontend (Monaco + ShadCN UI)
+│ ├── backend/ # (Socket connections)
+│ └── Server/ # express backend for connecting S3 project and handling AI model(working overt that)
+├── packages/
+│ └── db/ # Prisma schema, migrations, and client
+├── .env # Environment config
+└── docker-compose.yml
+
+
+
+---
+
+## 🛠️ Getting Started (Dev Setup)
+
+### ✅ 1. Install dependencies from root
 ```bash
-pnpm dlx shadcn@latest init
-```
+pnpm install
+✅ 2. Start supporting services (PostgreSQL, etc.)
+bash
+Copy
+Edit
+docker compose up
+✅ 3. Set up database
+bash
+Copy
+Edit
+cd packages/db/
+npx prisma migrate dev
+npx prisma generate
+✅ 4. Build the backend services
+bash
+Copy
+Edit
+cd ../../apps/backend
+pnpm tsbuild
 
-## Adding components
+cd ../server
+pnpm tsbuild
+✅ 5. Start all apps (frontend + backend + services)
+bash
+Copy
+Edit
+cd ../../
+pnpm dev
+This will start:
 
-To add components to your app, run the following command at the root of your `web` app:
+🖥️ Web at http://localhost:3000
 
-```bash
-pnpm dlx shadcn@latest add button -c apps/web
-```
+⚙️ Backend at 8080 and Server at 8000
 
-This will place the ui components in the `packages/ui/src/components` directory.
+🧩 Features
+🔁 Real-time collaboration using WebSockets
 
-## Tailwind
+👨‍💻 Monaco Editor with file explorer, terminal, and themes
 
-Your `tailwind.config.ts` and `globals.css` are already set up to use the components from the `ui` package.
+🧠 Context-aware AI assistant (WIP)
 
-## Using components
+📁 File system interaction with backend sync
 
-To use the components in your app, import them from the `ui` package.
+🐚 Bash shell access via PTY (node-pty)
 
-```tsx
-import { Button } from "@workspace/ui/components/ui/button"
-```
-# DenZEN
+☁️ Docker + K8s-ready architecture
+
+🌍 Tech Stack
+Layer	Stack
+Frontend	Next.js, TailwindCSS, ShadCN UI, Monaco
+Backend	Express.js, Node.js, WebSockets, PTY
+Database	PostgreSQL via Prisma ORM
+DevOps	Docker Compose, Kubernetes (WIP), PNPM
+Infra	Turborepo (monorepo orchestration)
+
+🤝 Contributing
+This is currently a private solo-built project.
+External contributions are invite-only.
+
+Freelancers or helpers should:
+
+Work in feature branches
+
+Open a PR for review (no direct push to main)
+
+Stick to existing code style and structure
+
+🚧 Work in Progress
+ AI assistant logic with in-editor suggestions
+
+ Terminal state persistence
+
+ Live file sync across sessions
+
+ Workspace sharing & access controls
+
+ Full CI/CD + K8s deployment
+
+🙌 Made by Ashwin Rai
+Built from scratch with the intent to replace clunky coding sandboxes with something real devs can trust.
+
+yaml
+Copy
+Edit
+
+---
+
+Let me know if you want:
+
+- Shields badges for tools (Monaco, Prisma, Docker, etc.)
+- A minimal `README_DEV.md` for contributors
+- A `CONTRIBUTING.md` to lay down clearer ground rules for collaborators
+
+Want this in your actual repo as a Markdown file? I can export it too.
