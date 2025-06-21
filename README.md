@@ -37,30 +37,22 @@ devzen/
 ```bash
 pnpm install
 ✅ 2. Start supporting services (PostgreSQL, etc.)
-bash
-Copy
-Edit
+
 docker compose up
 ✅ 3. Set up database
-bash
-Copy
-Edit
+
 cd packages/db/
 npx prisma migrate dev
 npx prisma generate
 ✅ 4. Build the backend services
-bash
-Copy
-Edit
+
 cd ../../apps/backend
 pnpm tsbuild
 
 cd ../server
 pnpm tsbuild
 ✅ 5. Start all apps (frontend + backend + services)
-bash
-Copy
-Edit
+
 cd ../../
 pnpm dev
 This will start:
