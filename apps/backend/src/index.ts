@@ -84,9 +84,11 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     await CRUD_operations.createNewFile(path, name);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`); 
                     ws.send(JSON.stringify({
-                        type: "success",
-                        payload: { message: "File created successfully" }
+                        type: RECEIVED_INIT_DIR_FETCH,
+                        payload: { message: "File created successfully",dirs }
                     }));
                     break;
                 }
@@ -98,9 +100,11 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     await CRUD_operations.createNewFolder(path, name);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder created successfully" }
+                        payload: { message: "Folder created successfully" , dirs}
                     }));
                     break;
                 }
@@ -114,9 +118,11 @@ wss.on("connection", (ws) => {
                     }
                     const NewPath = path.endsWith("/") ? path.slice(0, -1) : path; 
                     await CRUD_operations.Delete(NewPath);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "File deleted successfully" }
+                        payload: { message: "File deleted successfully" , dirs}
                     }));
                     break;
                 }
@@ -130,9 +136,11 @@ wss.on("connection", (ws) => {
                     }
                     const NewPath = path.endsWith("/") ? path : `${path}/`; 
                     await CRUD_operations.Delete(NewPath);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder deleted successfully" } 
+                        payload: { message: "Folder deleted successfully" ,dirs} 
                     }));
                     break;
                 }
@@ -144,9 +152,11 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     await CRUD_operations.renameFolder(path, name);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder renamed successfully" }
+                        payload: { message: "Folder renamed successfully",dirs }
                     }));
                     break;
                 }
@@ -159,9 +169,11 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     await CRUD_operations.renameFile(path, name);
+                    const projectID = path.split("workspace/")[1].split("/")[0];
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",    
-                        payload: { message: "File renamed successfully" }
+                        payload: { message: "File renamed successfully",dirs }
                     }));
                     break;
                 }
