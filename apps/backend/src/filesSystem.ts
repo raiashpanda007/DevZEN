@@ -154,6 +154,20 @@ export const renameFolder = async (key: string, newName: string) => {
     });
 };
 
+export const saveFileContent = async (path: string, content: string) => {
+    const absolutePath = p.join(homeDir,path);
+    return new Promise((resolve, reject) => {
+        fs.writeFile(absolutePath, content, "utf8", (err) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+
+}
+
 
 export const CRUD_operations = {
     createNewFile,

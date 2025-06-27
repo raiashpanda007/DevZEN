@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
@@ -19,7 +19,8 @@ wss.on("connection", (ws) => {
         MESSAGE_CREATE_FOLDER,
         MESSAGE_DELETE_FOLDER,
         MESSAGE_RENAME_FOLDER,
-        MESSAGE_RENAME_FILE
+        MESSAGE_RENAME_FILE,
+        MESSAGE_SAVE_FILE_CONTENT
     } = Messages;
     console.log("New WebSocket connection established");
 
@@ -85,10 +86,10 @@ wss.on("connection", (ws) => {
                     }
                     await CRUD_operations.createNewFile(path, name);
                     const projectID = path.split("workspace/")[1].split("/")[0];
-                    const dirs = await fetchAllDirs(`/workspace/${projectID}`); 
+                    const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: RECEIVED_INIT_DIR_FETCH,
-                        payload: { message: "File created successfully",dirs }
+                        payload: { message: "File created successfully", dirs }
                     }));
                     break;
                 }
@@ -104,25 +105,25 @@ wss.on("connection", (ws) => {
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder created successfully" , dirs}
+                        payload: { message: "Folder created successfully", dirs }
                     }));
                     break;
                 }
                 case MESSAGE_DELETE_FILE: {
                     console.log("Deleting file");
-                    
+
                     const { path } = message.payload;
                     if (!path) {
                         ws.send(JSON.stringify({ type: "error", payload: "File path is required to delete a file" }));
                         return;
                     }
-                    const NewPath = path.endsWith("/") ? path.slice(0, -1) : path; 
+                    const NewPath = path.endsWith("/") ? path.slice(0, -1) : path;
                     await CRUD_operations.Delete(NewPath);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "File deleted successfully" , dirs}
+                        payload: { message: "File deleted successfully", dirs }
                     }));
                     break;
                 }
@@ -134,13 +135,13 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: "Folder path is required to delete a folder" }));
                         return;
                     }
-                    const NewPath = path.endsWith("/") ? path : `${path}/`; 
+                    const NewPath = path.endsWith("/") ? path : `${path}/`;
                     await CRUD_operations.Delete(NewPath);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder deleted successfully" ,dirs} 
+                        payload: { message: "Folder deleted successfully", dirs }
                     }));
                     break;
                 }
@@ -156,7 +157,7 @@ wss.on("connection", (ws) => {
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
                         type: "success",
-                        payload: { message: "Folder renamed successfully",dirs }
+                        payload: { message: "Folder renamed successfully", dirs }
                     }));
                     break;
                 }
@@ -172,14 +173,31 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",    
-                        payload: { message: "File renamed successfully",dirs }
+                        type: "success",
+                        payload: { message: "File renamed successfully", dirs }
                     }));
                     break;
                 }
                 default: {
                     ws.send(JSON.stringify({ type: "error", payload: "Unknown message type" }));
                     break;
+                }
+
+                case MESSAGE_SAVE_FILE_CONTENT: {
+                    console.log("Saving file content");
+                    const { path, content } = message.payload;
+                    if (!path || content) {
+                        ws.send(JSON.stringify({type:"error",payload:"Please provide path and content"}))
+                    }
+                    const updateContentFile = await saveFileContent(path,content);
+                    if(!updateContentFile) {
+                        ws.send(JSON.stringify({type:"error",payload:`Unable to update the contents of file ${path}`}))
+                    }
+
+                    ws.send(JSON.stringify({
+                        type:"success",
+                        payload:"File updated"
+                    }))
                 }
             }
         } catch (err) {

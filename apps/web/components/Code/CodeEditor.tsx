@@ -1,6 +1,10 @@
 "use client";
-import React, { use } from "react";
-import MonacoEditor from "@workspace/ui/components/Code/MonacoEditor";
+import React from "react";
+import dynamic from 'next/dynamic';
+const MonacoEditor = dynamic(() => import('@workspace/ui/components/Code/MonacoEditor'), {
+  ssr: false,
+  loading: () => <div>Loading editor...</div>,
+});
 import Sidebar from "@workspace/ui/components/Code/Sidebar";
 import { useState,useEffect } from "react";
 import { useSocket } from "@workspace/ui/hooks/useSocket";
@@ -83,6 +87,7 @@ function CodeEditor() {
         <MonacoEditor
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
+          socket = {socket}
         />
       </div>
     </div>
