@@ -7,9 +7,15 @@ export const CreateProjectSchemaBackend = zod.object({
 })
 
 export const VerifyProjectSchemaWeb = zod.object({
-  projectId:zod.string().nonempty()
+  projectId:zod.string().nonempty(),
+  shareStatus:zod.boolean().optional(),
+  shareStatusCode:zod.string().optional()
 })
 
+
+export const GenerateShareURLSchemaWeb = zod.object({
+  projectId:zod.string().nonempty()
+})
 export type CreateProjectSchemaType = zod.infer<typeof CreateProjectSchemaBackend>;
 export type { Template,ProjectItem }
 export { CreateProjectSchema } from "./Schema/CreateProjectSchema"

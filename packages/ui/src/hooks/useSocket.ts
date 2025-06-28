@@ -1,7 +1,6 @@
 import {useState, useEffect} from 'react';
 import { Messages } from "@workspace/types";
 import { useParams } from 'next/navigation.js';
-import { useSession } from 'next-auth/react';
 
 
 

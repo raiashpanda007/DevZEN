@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import dynamic from 'next/dynamic';
 const MonacoEditor = dynamic(() => import('@workspace/ui/components/Code/MonacoEditor'), {
   ssr: false,
@@ -83,12 +83,14 @@ function CodeEditor() {
         socket={socket}
       />
 
-      <div className="w-5/6 h-full">
+      <div className="w-4/5 ">
+        <Suspense  fallback={<div>Loading editor...</div>}>
         <MonacoEditor
           selectedFile={selectedFile}
           setSelectedFile={setSelectedFile}
           socket = {socket}
         />
+      </Suspense>
       </div>
     </div>
   );

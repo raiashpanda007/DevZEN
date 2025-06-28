@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@workspace/ui/components/button";
 import { Play } from "lucide-react";
 const Run = () => {

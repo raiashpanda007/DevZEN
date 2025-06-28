@@ -3,15 +3,13 @@ import React from "react";
 import CodeEditor from "@/components/Code/CodeEditor";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-const verifyUser = async (projectId: string) => {
+import { useParams, useRouter,useSearchParams } from "next/navigation";
+const verifyUser = async (projectId: string,shareStatusCode:string | null ,shareStatus:boolean|null) => {
   try {
-    console.log("verify ran");
+    const body = shareStatus&&shareStatusCode ? {projectId,shareStatus,shareStatusCode}:{projectId}
     const verifyProject = await axios.post(
       `${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project/verify_project/`,
-      {
-        projectId,
-      }
+      body
     );
     if (verifyProject.status === 401 || !verifyProject.data.data) {
       return false;
@@ -25,12 +23,16 @@ const verifyUser = async (projectId: string) => {
 
 export default function Page() {
   const { project } = useParams();
+  const shareStatus = (useSearchParams().get('share') === "true")
+  const shareStatusCode = useSearchParams().get('shareid')
   const router = useRouter();
   const [verified, setVerified] = useState(true);
   const verifyFunc = async (project: string) => {
-    const result = await verifyUser(project);
+    const result = await verifyUser(project,shareStatusCode,shareStatus,);
     setVerified(result);
   };
+
+  
   useEffect(() => {
     if(!project || !project[0]) return
     verifyFunc(project[0]);

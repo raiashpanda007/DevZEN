@@ -1,3 +1,4 @@
+"use client"
 import {Button} from "@workspace/ui/components/button";
 import { Terminal } from "lucide-react";
 
