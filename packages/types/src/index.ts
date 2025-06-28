@@ -6,10 +6,13 @@ export const CreateProjectSchemaBackend = zod.object({
     language: zod.string().nonempty(),
 })
 
+export const VerifyProjectSchemaWeb = zod.object({
+  projectId:zod.string().nonempty()
+})
+
 export type CreateProjectSchemaType = zod.infer<typeof CreateProjectSchemaBackend>;
 export type { Template,ProjectItem }
 export { CreateProjectSchema } from "./Schema/CreateProjectSchema"
-
 
 export enum Type {
     FILE,
