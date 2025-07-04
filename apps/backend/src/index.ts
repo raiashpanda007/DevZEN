@@ -104,7 +104,7 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",
+                        type:"success_crud",
                         payload: { message: "Folder created successfully", dirs }
                     }));
                     break;
@@ -122,7 +122,7 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",
+                        type:"success_crud",
                         payload: { message: "File deleted successfully", dirs }
                     }));
                     break;
@@ -140,7 +140,7 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",
+                        type:"success_crud",
                         payload: { message: "Folder deleted successfully", dirs }
                     }));
                     break;
@@ -156,7 +156,7 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",
+                        type:"success_crud",
                         payload: { message: "Folder renamed successfully", dirs }
                     }));
                     break;
@@ -173,7 +173,7 @@ wss.on("connection", (ws) => {
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
                     ws.send(JSON.stringify({
-                        type: "success",
+                        type:"success_crud",
                         payload: { message: "File renamed successfully", dirs }
                     }));
                     break;

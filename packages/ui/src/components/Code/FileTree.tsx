@@ -139,7 +139,7 @@ const FileDiv = ({
           group-hover:visible
         "
       >
-        <File_DirMoreOptions directory={selectedFile} socket={socket} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} setDialogType={setTypeDialog} setPath={setPath}/>
+        <File_DirMoreOptions directory={file} socket={socket} dialogOpen={dialogOpen} setDialogOpen={setDialogOpen} setDialogType={setTypeDialog} setPath={setPath}/>
       </div>
     </div>
   );

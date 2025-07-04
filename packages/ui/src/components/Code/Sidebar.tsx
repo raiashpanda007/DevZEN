@@ -41,7 +41,7 @@ function Sidebar({
     const handleMessage = (event: MessageEvent) => {
       const data = JSON.parse(event.data);
 
-      if (data.type === "received_init_dir_fetch") {
+      if (data.type === "received_init_dir_fetch" || data.type === "success_crud") {
         console.log("Received initial directory structure:", data.payload.dirs);
         const files: RemoteFile[] = data.payload.dirs;
         console.log("Files:", files);
