@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
-import loader from "@monaco-editor/loader";
 import { useDebounce } from "react-use";
 import Run from "@workspace/ui/components/Code/Run";
 import Console from "@workspace/ui/components/Code/Console";
@@ -14,27 +13,29 @@ import ShareProjectButton from "@workspace/ui/components/Code/ShareProject";
 import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
 import { FiCopy } from "react-icons/fi";
-
+import type * as monaco from "monaco-editor";
 
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
   socket: WebSocket | null;
 }
+
 interface SharedDialogBoxProps {
-  URL:string | null
-  setSharedDialogBox:React.Dispatch<React.SetStateAction<boolean>>
+  URL: string | null;
+  setSharedDialogBox: React.Dispatch<React.SetStateAction<boolean>>;
 }
-const ShareDialogBox = ({URL,setSharedDialogBox}:SharedDialogBoxProps) => {
+
+const ShareDialogBox = ({ URL, setSharedDialogBox }: SharedDialogBoxProps) => {
   const [copied, setCopied] = useState(false);
   
-  const handleCopy = () => {
+  const handleCopy = useCallback(() => {
     if (URL) {
       navigator.clipboard.writeText(URL);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  };
+  }, [URL]);
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
@@ -145,122 +146,181 @@ const MonacoEditor = ({
   setSelectedFile,
   socket,
 }: MonacoEditorProps) => {
-  if (!selectedFile || selectedFile.type != Type.FILE) return;
-  const editorRef = useRef<any>(null);
-  const [debouncedContent, setDebouncedContent] = useState<string | undefined>(
-    ""
-  );
-  const [content, setContent] = useState(selectedFile?.content);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import("monaco-editor") | null>(null);
-  const [theme, setTheme] = useState("github-dark-default");
+  const [content, setContent] = useState<string>("");
+  const [theme, setTheme] = useState<string>("vs-light");
   const [sharedDialogBox, setSharedDialogBox] = useState(false);
-  const [shareURl,setShareURL ] = useState<string|null>(null)
-  const currTheme = useTheme().theme;
+  const [shareURL, setShareURL] = useState<string | null>(null);
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const { theme: currTheme } = useTheme();
 
-  const updateContent = (
+  // Memoize the file path to prevent unnecessary re-renders
+  const currentFilePath = useMemo(() => selectedFile?.path, [selectedFile?.path]);
+  const currentFileContent = useMemo(() => selectedFile?.content || "", [selectedFile?.content]);
+
+  const updateContent = useCallback((
     socket: WebSocket | null,
-    content: string | undefined,
+    content: string,
     path: string
   ) => {
-    if (!content) return;
-    if (!socket) {
-      return <>Unable to connect to backend</>;
+    if (!content || !socket || socket.readyState !== WebSocket.OPEN) return;
+    
+    try {
+      socket.send(
+        JSON.stringify({
+          type: "save_file_content",
+          payload: {
+            path,
+            content,
+          },
+        })
+      );
+    } catch (error) {
+      console.error("Failed to send content update:", error);
     }
-    socket.send(
-      JSON.stringify({
-        type: "save_file_content",
-        payload: {
-          path,
-          content,
-        },
-      })
-    );
-  };
-
-  useDebounce(() => setDebouncedContent(content), 750, [content]);
-
-  useEffect(() => {
-    (loader as any).init().then((monaco: typeof import("monaco-editor")) => {
-      monacoRef.current = monaco;
-    });
   }, []);
 
-  useEffect(() => {
-    setTheme(currTheme === "dark" ? "vs-dark" : "vs-light");
-  }, [currTheme]);
+  // Debounce content changes
+  const [debouncedContent, setDebouncedContent] = useState<string>("");
+  
+  useDebounce(() => {
+    if (content && content !== currentFileContent && currentFilePath) {
+      setDebouncedContent(content);
+    }
+  }, 750, [content, currentFileContent, currentFilePath]);
 
+  // Set theme based on current theme
   useEffect(() => {
-    updateContent(socket, debouncedContent, selectedFile.path);
-  }, [debouncedContent]);
+    const newTheme = currTheme === "dark" ? "vs-dark" : "vs-light";
+    if (newTheme !== theme) {
+      setTheme(newTheme);
+    }
+  }, [currTheme, theme]);
 
-  const handleEditorMount = (
-    editor: any,
+  // Update content when debounced content changes
+  useEffect(() => {
+    if (debouncedContent && currentFilePath) {
+      updateContent(socket, debouncedContent, currentFilePath);
+    }
+  }, [debouncedContent, currentFilePath, socket, updateContent]);
+
+  // Handle editor mount
+  const handleEditorMount = useCallback((
+    editor: monaco.editor.IStandaloneCodeEditor,
     monaco: typeof import("monaco-editor")
   ) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-  };
+    setIsEditorReady(true);
+  }, []);
 
+  // Setup model and language support when selectedFile changes
   useEffect(() => {
-    if (!selectedFile || !monacoRef.current || !socket) return;
+    if (!selectedFile || !monacoRef.current || !editorRef.current || !isEditorReady) return;
 
     const monaco = monacoRef.current;
+    const editor = editorRef.current;
     const language = getLanguageFromFileName(selectedFile.name);
-    const modelUri = monaco.Uri.parse(`inmemory://model/${selectedFile.name}`);
-    let model = monaco.editor.getModel(modelUri);
+    const modelUri = monaco.Uri.parse(`inmemory://model/${selectedFile.path}`);
+    
+    try {
+      // Check if model already exists
+      let model = monaco.editor.getModel(modelUri);
 
-    if (!model) {
-      model = monaco.editor.createModel(
-        selectedFile.content || "",
-        language,
-        modelUri
-      );
-    } else {
-      model.setValue(selectedFile.content || "");
+      if (!model) {
+        // Create new model
+        model = monaco.editor.createModel(
+          currentFileContent,
+          language,
+          modelUri
+        );
+      } else {
+        model.setValue(currentFileContent);
+      }
+
+      // Set the model to the editor
+      if (editor.getModel() !== model) {
+        editor.setModel(model);
+      }
+
+      // Set content state
+      setContent(currentFileContent);
+
+      // Configure TypeScript/JavaScript language support
+      if (language === "typescript" || language === "javascript") {
+        monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+          noSemanticValidation: true,
+          noSyntaxValidation: false,
+        });
+
+        monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+          allowJs: true,
+          checkJs: false,
+          moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+          target: monaco.languages.typescript.ScriptTarget.ESNext,
+          module: monaco.languages.typescript.ModuleKind.ESNext,
+          esModuleInterop: true,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to setup Monaco model:", error);
     }
+  }, [selectedFile, isEditorReady, currentFileContent]);
 
-    if (editorRef.current) {
-      editorRef.current.setModel(model);
-    }
+  // Setup change listener
+  useEffect(() => {
+    if (!editorRef.current || !isEditorReady) return;
 
-    if (language === "typescript" || language === "javascript") {
-      monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: false,
-      });
+    const editor = editorRef.current;
+    const disposable = editor.onDidChangeModelContent((e) => {
+      const currentValue = editor.getValue();
+      console.log("Changes log",e.changes)
+      if (currentValue !== content) {
 
-      monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
-        allowJs: true,
-        checkJs: false,
-        moduleResolution:
-          monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-        target: monaco.languages.typescript.ScriptTarget.ESNext,
-        module: monaco.languages.typescript.ModuleKind.ESNext,
-        esModuleInterop: true,
-      });
-    }
-  }, [selectedFile]);
+        setContent(currentValue);
+      }
+    });
 
-  return sharedDialogBox ? (
-    <ShareDialogBox URL={shareURl} setSharedDialogBox={setSharedDialogBox}/>
-  ) : (
+    return () => {
+      disposable.dispose();
+    };
+  }, [isEditorReady, content]);
+
+  // Early return if no file selected
+  if (!selectedFile || selectedFile.type !== Type.FILE) {
+    return null;
+  }
+
+  if (sharedDialogBox) {
+    return <ShareDialogBox URL={shareURL} setSharedDialogBox={setSharedDialogBox} />;
+  }
+
+  return (
     <div className="relative">
       <Editor
         className="relative"
         height="750px"
         theme={theme}
+        value={content}
         onMount={handleEditorMount}
         options={{
           fontSize: 14,
           minimap: { enabled: true },
           automaticLayout: true,
+          wordWrap: "on",
+          scrollBeyondLastLine: false,
+          selectOnLineNumbers: true,
+          roundedSelection: false,
+          readOnly: false,
+          cursorStyle: "line",
         }}
-        onChange={(value) => setContent(value)}
+        loading={<div className="flex items-center justify-center h-full">Loading editor...</div>}
       />
       <div className="flex w-full">
         <Run />
         <Console />
-        <ShareProjectButton setSharedDialogBox={setSharedDialogBox} setShareURL={setShareURL}/>
+        <ShareProjectButton setSharedDialogBox={setSharedDialogBox} setShareURL={setShareURL} />
       </div>
     </div>
   );
