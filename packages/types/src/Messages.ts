@@ -12,6 +12,7 @@ const MESSAGE_RENAME_FOLDER = 'rename_folder'
 const MESSAGE_RENAME_FILE = 'rename_file'
 const MESSAGE_SAVE_FILE_CONTENT = 'save_file_content'
 
+
 export const Messages = {
     MESSAGE_INIT,
     DIR_FETCH,
@@ -26,4 +27,5 @@ export const Messages = {
     MESSAGE_RENAME_FOLDER,
     MESSAGE_RENAME_FILE,
     MESSAGE_SAVE_FILE_CONTENT
+    
 } as const;

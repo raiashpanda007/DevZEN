@@ -2,7 +2,6 @@ import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
-
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
 
@@ -76,6 +75,7 @@ wss.on("connection", (ws) => {
                     }));
                     break;
                 }
+
                 case MESSAGE_CREATE_FILE: {
                     console.log("Creating file");
                     const { path, name } = message.payload;
@@ -87,10 +87,14 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.createNewFile(path, name);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type: RECEIVED_INIT_DIR_FETCH,
-                        payload: { message: "File created successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(JSON.stringify({
+                                type: RECEIVED_INIT_DIR_FETCH,
+                                payload: { message: "File created successfully", dirs }
+                            }))
+                        }
+                    })
                     break;
                 }
                 case MESSAGE_CREATE_FOLDER: {
@@ -103,10 +107,14 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.createNewFolder(path, name);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type:"success_crud",
-                        payload: { message: "Folder created successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(JSON.stringify({
+                                type: "success_crud",
+                                payload: { message: "Folder created successfully", dirs }
+                            }))
+                        }
+                    })
                     break;
                 }
                 case MESSAGE_DELETE_FILE: {
@@ -121,10 +129,14 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.Delete(NewPath);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type:"success_crud",
-                        payload: { message: "File deleted successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(JSON.stringify({
+                                type: "success_crud",
+                                payload: { message: "File deleted successfully", dirs }
+                            }))
+                        }
+                    })
                     break;
                 }
                 case MESSAGE_DELETE_FOLDER: {
@@ -139,10 +151,16 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.Delete(NewPath);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type:"success_crud",
-                        payload: { message: "Folder deleted successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(
+                                JSON.stringify({
+                                    type: "success_crud",
+                                    payload: { message: "Folder deleted successfully", dirs }
+                                })
+                            )
+                        }
+                    })
                     break;
                 }
                 case MESSAGE_RENAME_FOLDER: {
@@ -155,10 +173,14 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.renameFolder(path, name);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type:"success_crud",
-                        payload: { message: "Folder renamed successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(JSON.stringify({
+                                type: "success_crud",
+                                payload: { message: "Folder renamed successfully", dirs }
+                            }))
+                        }
+                    })
                     break;
                 }
 
@@ -172,10 +194,14 @@ wss.on("connection", (ws) => {
                     await CRUD_operations.renameFile(path, name);
                     const projectID = path.split("workspace/")[1].split("/")[0];
                     const dirs = await fetchAllDirs(`/workspace/${projectID}`);
-                    ws.send(JSON.stringify({
-                        type:"success_crud",
-                        payload: { message: "File renamed successfully", dirs }
-                    }));
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === client.OPEN) {
+                            client.send(JSON.stringify({
+                                type: "success_crud",
+                                payload: { message: "File renamed successfully", dirs }
+                            }))
+                        }
+                    })
                     break;
                 }
                 default: {
@@ -183,22 +209,22 @@ wss.on("connection", (ws) => {
                     break;
                 }
 
-                case MESSAGE_SAVE_FILE_CONTENT: {
-                    console.log("Saving file content");
-                    const { path, content } = message.payload;
-                    if (!path || content) {
-                        ws.send(JSON.stringify({type:"error",payload:"Please provide path and content"}))
-                    }
-                    const updateContentFile = await saveFileContent(path,content);
-                    if(!updateContentFile) {
-                        ws.send(JSON.stringify({type:"error",payload:`Unable to update the contents of file ${path}`}))
-                    }
+                // case MESSAGE_SAVE_FILE_CONTENT: {
+                //     console.log("Saving file content");
+                //     const { path, content } = message.payload;
+                //     if (!path || content) {
+                //         ws.send(JSON.stringify({type:"error",payload:"Please provide path and content"}))
+                //     }
+                //     const updateContentFile = await saveFileContent(path,content);
+                //     if(!updateContentFile) {
+                //         ws.send(JSON.stringify({type:"error",payload:`Unable to update the contents of file ${path}`}))
+                //     }
 
-                    ws.send(JSON.stringify({
-                        type:"success",
-                        payload:"File updated"
-                    }))
-                }
+                //     ws.send(JSON.stringify({
+                //         type:"success",
+                //         payload:"File updated"
+                //     }))
+                // }
             }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);
