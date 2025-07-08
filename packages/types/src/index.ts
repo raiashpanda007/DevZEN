@@ -36,9 +36,31 @@ export interface CommonProps {
       depth: number;
   }
 export interface File extends CommonProps{}
+export type CharObj = {
+  id:string
+  value:string
+}
 
 
-// Export all named exports from MESSAGE_TYPES as named exports
+
+export interface InsertTypeOps {
+    type: "insert";
+    id: string;
+    value: string ;
+    after: string | null;
+    timeStamp: Date;
+}
+
+export interface DeleteTypeOps {
+    type: "delete";
+    id: string;
+    timeStamp: Date
+
+}
+
+export type Ops = InsertTypeOps | DeleteTypeOps
+
+
 export {Messages} from "./Messages";
 
 

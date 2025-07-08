@@ -7,6 +7,7 @@ import { useParams, useRouter,useSearchParams } from "next/navigation";
 const verifyUser = async (projectId: string,shareStatusCode:string | null ,shareStatus:boolean|null) => {
   try {
     const body = shareStatus&&shareStatusCode ? {projectId,shareStatus,shareStatusCode}:{projectId}
+    console.log(body);
     const verifyProject = await axios.post(
       `${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project/verify_project/`,
       body
