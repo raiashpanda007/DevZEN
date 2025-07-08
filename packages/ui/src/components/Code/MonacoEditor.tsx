@@ -1,5 +1,4 @@
 "use client";
-
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
@@ -14,7 +13,7 @@ import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
 import { FiCopy } from "react-icons/fi";
 import type * as monaco from "monaco-editor";
-import { applyOps } from "@workspace/ui/lib/applyOps.js";
+import { applyOps } from "@workspace/ui/lib/applyOps";
 import { nanoid } from "nanoid";
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
