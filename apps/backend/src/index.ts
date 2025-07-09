@@ -19,7 +19,9 @@ wss.on("connection", (ws) => {
         MESSAGE_DELETE_FOLDER,
         MESSAGE_RENAME_FOLDER,
         MESSAGE_RENAME_FILE,
-        MESSAGE_SAVE_FILE_CONTENT
+        MESSAGE_SAVE_FILE_CONTENT,
+        MESSAGE_CRDT_UPDATE
+        
     } = Messages;
     console.log("New WebSocket connection established");
 
@@ -208,23 +210,23 @@ wss.on("connection", (ws) => {
                     ws.send(JSON.stringify({ type: "error", payload: "Unknown message type" }));
                     break;
                 }
-
-                // case MESSAGE_SAVE_FILE_CONTENT: {
-                //     console.log("Saving file content");
-                //     const { path, content } = message.payload;
-                //     if (!path || content) {
-                //         ws.send(JSON.stringify({type:"error",payload:"Please provide path and content"}))
-                //     }
-                //     const updateContentFile = await saveFileContent(path,content);
-                //     if(!updateContentFile) {
-                //         ws.send(JSON.stringify({type:"error",payload:`Unable to update the contents of file ${path}`}))
-                //     }
-
-                //     ws.send(JSON.stringify({
-                //         type:"success",
-                //         payload:"File updated"
-                //     }))
-                // }
+            case MESSAGE_SAVE_FILE_CONTENT:
+                console.log("Save message file content",message )
+                const {payload} = message;
+                if(!payload) {
+                    ws.send(JSON.stringify({
+                        type:"Error no payload in crdt update file",
+                    }))
+                }
+                wss.clients.forEach((client) =>{
+                    if(client != ws && client.readyState === client.OPEN){
+                        client.send(JSON.stringify({
+                            type:MESSAGE_CRDT_UPDATE,
+                            payload
+                        }))
+                    }
+                })
+                break;
             }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);

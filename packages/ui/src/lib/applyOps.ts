@@ -5,6 +5,7 @@ export function applyOps(ops: Ops[], returnArray = false): string | CharObj[] {
   const deleted = new Set<string>();
   const nextMap = new Map<string | null, string[]>();
 
+  // Process operations
   for (const op of ops) {
     if (op.type === "insert") {
       insertMap.set(op.id, op);
@@ -17,25 +18,46 @@ export function applyOps(ops: Ops[], returnArray = false): string | CharObj[] {
     }
   }
 
+  // Sort operations by timestamp within each position
+  for (const [after, ids] of nextMap.entries()) {
+    ids.sort((a, b) => {
+      const opA = insertMap.get(a);
+      const opB = insertMap.get(b);
+      if (!opA || !opB) return 0;
+
+      // Compare timestamps
+      return opA.timeStamp.getTime() - opB.timeStamp.getTime();
+    });
+  }
+
   const result: { id: string; value: string }[] = [];
 
-  function walk(after: string | null) {
-    const children = nextMap.get(after);
-    if (!children) return;
-    for (const id of children) {
-      if (!deleted.has(id)) {
-        const op = insertMap.get(id);
-        if (!op) return;
-        result.push({
-          id: op.id,
-          value: op.value,
-        });
+  // Improved traversal function
+  function buildOrderedDocument() {
+    let currentAfter: string | null = null;
+
+    // Process all characters from the start
+    const visited = new Set<string>();
+    const queue: (string | null)[] = [null]; // Start with null as the root
+
+    while (queue.length > 0) {
+      currentAfter = queue.shift()!;
+      const children = nextMap.get(currentAfter) || [];
+
+      for (const childId of children) {
+        if (deleted.has(childId) || visited.has(childId)) continue;
+
+        const op = insertMap.get(childId);
+        if (!op) continue;
+
+        result.push({ id: childId, value: op.value });
+        visited.add(childId);
+        queue.push(childId); // Add to queue for breadth-first traversal
       }
-      walk(id); // DFS
     }
   }
 
-  walk(null);
+  buildOrderedDocument();
 
   return returnArray ? result : result.map((r) => r.value).join("");
 }

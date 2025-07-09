@@ -222,6 +222,10 @@ const MonacoEditor = ({
   useDebounce(
     () => {
       if (content && content !== currentFileContent && currentFilePath) {
+        console.log(
+          "Current File path -------------------------",
+          currentFilePath
+        );
         setDebouncedContent(content);
       }
     },
@@ -269,27 +273,15 @@ const MonacoEditor = ({
     const monaco = monacoRef.current;
     const editor = editorRef.current;
     const language = getLanguageFromFileName(selectedFile.name);
-    const modelUri = monaco.Uri.parse(`inmemory://model/${selectedFile.path}`);
+    const modelUri = monaco.Uri.parse(`inmemory://model${selectedFile.path}`);
 
     try {
       // Check if model already exists
-      let model = monaco.editor.getModel(modelUri);
-
-      if (!model) {
-        // Create new model
-        model = monaco.editor.createModel(
-          currentFileContent,
-          language,
-          modelUri
-        );
-      } else {
-        model.setValue(currentFileContent);
-      }
-
-      // Set the model to the editor
-      if (editor.getModel() !== model) {
-        editor.setModel(model);
-      }
+      let model =
+        monaco.editor.getModel(modelUri) ||
+        monaco.editor.createModel(currentFileContent, language, modelUri);
+      editor.setModel(model);
+      model.setValue(currentFileContent);
 
       // Set content state
       setContent(currentFileContent);
@@ -318,6 +310,7 @@ const MonacoEditor = ({
 
   const opsRef = useRef<Ops[]>([]);
   const bufferRef = useRef<CharObj[]>([]);
+  const isRemoteChangeRef = useRef(false);
 
   useEffect(() => {
     if (!editorRef.current || !isEditorReady) return;
@@ -363,6 +356,9 @@ const MonacoEditor = ({
     };
 
     const disposable = editor.onDidChangeModelContent((e) => {
+      // Skip if this change was caused by a remote update
+      if (isRemoteChangeRef.current) return;
+
       const allOps: Ops[] = [];
 
       for (const change of e.changes) {
@@ -379,7 +375,7 @@ const MonacoEditor = ({
         socket.send(
           JSON.stringify({
             type: "crdt_update",
-            payload: { ops:allOps, filePath: selectedFile?.path },
+            payload: { ops: allOps, filePath: selectedFile?.path },
           })
         );
       }
@@ -392,13 +388,14 @@ const MonacoEditor = ({
 
   useEffect(() => {
     if (!socket) return;
+
     const handleMessage = (event: MessageEvent) => {
       try {
         const msg = JSON.parse(event.data);
         if (msg.type !== "crdt_update_server_side") return;
 
-        const incomingOps: Ops[] = msg.payload;
-        const path = msg.path;
+        const incomingOps: Ops[] = msg.payload.ops;
+        const path = msg.payload.filePath;
         if (path !== selectedFile?.path) return;
 
         opsRef.current.push(...incomingOps);
@@ -407,7 +404,8 @@ const MonacoEditor = ({
         bufferRef.current = newBuffer;
 
         const editor = editorRef.current;
-        if (editor && editor.getValue() != updatedContent) {
+        if (editor && editor.getValue() !== updatedContent) {
+          isRemoteChangeRef.current = true; // Set flag before update
           const model = editor.getModel();
           if (model) {
             const selection = editor.getSelection();
@@ -417,13 +415,29 @@ const MonacoEditor = ({
               () => (selection ? [selection] : null)
             );
           }
+          // Use setTimeout to ensure the flag is reset after current execution
+          setTimeout(() => {
+            isRemoteChangeRef.current = false;
+          }, 0);
         }
       } catch (error) {
-        console.error("Error in catching the error: ", error);
+        isRemoteChangeRef.current = false; // Reset flag on error
+        console.error("Error handling CRDT update:", error);
       }
-      socket.addEventListener("message", handleMessage);
     };
-  });
+
+    socket.addEventListener("message", handleMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleMessage);
+    };
+  }, [socket, selectedFile?.path]);
+
+
+  useEffect(() => {
+    opsRef.current = [];
+    bufferRef.current = [];
+  }, [selectedFile?.path]);
 
   if (!selectedFile || selectedFile.type !== Type.FILE) {
     return null;

@@ -10,8 +10,8 @@ const MESSAGE_CREATE_FOLDER = 'create_folder'
 const MESSAGE_DELETE_FOLDER = 'delete_folder'
 const MESSAGE_RENAME_FOLDER = 'rename_folder'
 const MESSAGE_RENAME_FILE = 'rename_file'
-const MESSAGE_SAVE_FILE_CONTENT = 'save_file_content'
-
+const MESSAGE_SAVE_FILE_CONTENT = 'crdt_update'
+const MESSAGE_CRDT_UPDATE = "crdt_update_server_side"
 
 export const Messages = {
     MESSAGE_INIT,
@@ -26,6 +26,7 @@ export const Messages = {
     MESSAGE_DELETE_FOLDER,
     MESSAGE_RENAME_FOLDER,
     MESSAGE_RENAME_FILE,
-    MESSAGE_SAVE_FILE_CONTENT
+    MESSAGE_SAVE_FILE_CONTENT,
+    MESSAGE_CRDT_UPDATE
     
 } as const;
