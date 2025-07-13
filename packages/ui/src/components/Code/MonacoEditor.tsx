@@ -196,36 +196,14 @@ const MonacoEditor = ({
     [selectedFile?.content]
   );
 
-  const updateContent = useCallback(
-    (socket: WebSocket | null, content: string, path: string) => {
-      if (!content || !socket || socket.readyState !== WebSocket.OPEN) return;
-
-      try {
-        socket.send(
-          JSON.stringify({
-            type: "save_file_content",
-            payload: {
-              path,
-              content,
-            },
-          })
-        );
-      } catch (error) {
-        console.error("Failed to send content update:", error);
-      }
-    },
-    []
-  );
+  
 
   const [debouncedContent, setDebouncedContent] = useState<string>("");
 
   useDebounce(
     () => {
       if (content && content !== currentFileContent && currentFilePath) {
-        console.log(
-          "Current File path -------------------------",
-          currentFilePath
-        );
+       
         setDebouncedContent(content);
       }
     },
@@ -241,11 +219,7 @@ const MonacoEditor = ({
     }
   }, [currTheme, theme]);
 
-  useEffect(() => {
-    if (debouncedContent && currentFilePath) {
-      updateContent(socket, debouncedContent, currentFilePath);
-    }
-  }, [debouncedContent, currentFilePath, socket, updateContent]);
+  
 
   // Handle editor mount
   const handleEditorMount = useCallback(

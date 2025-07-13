@@ -1,7 +1,8 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
 import { getRootFilesandFolders } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
+import getRedisInstance from "@workspace/queue"
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
 
@@ -213,6 +214,12 @@ wss.on("connection", (ws) => {
             case MESSAGE_SAVE_FILE_CONTENT:
                 console.log("Save message file content",message )
                 const {payload} = message;
+                
+                const {filePath , ops} = payload;
+                // Updated data in redis
+                await getRedisInstance.rpush(`ops:${filePath}`,JSON.stringify(ops));
+                
+
                 if(!payload) {
                     ws.send(JSON.stringify({
                         type:"Error no payload in crdt update file",
