@@ -48,7 +48,7 @@ function Sidebar({
         const tree = buildFileTree(files);
         setRootDir(tree);
       } else if (data.type === RECIEVED_FILE_FETCH) {
-        console.log("Received file content");
+        console.log("Received file content",data);
         setSelectedFile((prev) => {
           if (!prev) return undefined;
           return {

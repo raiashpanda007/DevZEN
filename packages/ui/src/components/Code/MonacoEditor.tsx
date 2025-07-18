@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useDebounce } from "react-use";
 import Run from "@workspace/ui/components/Code/Run";
 import Console from "@workspace/ui/components/Code/Console";
-import type { CharObj, File as FileTypes, Ops } from "@workspace/types";
+import type { File as FileTypes } from "@workspace/types";
 import { Type } from "@workspace/types";
 import { getLanguageFromFileName } from "@workspace/ui/lib/getLanguagefromName";
 import ShareProjectButton from "@workspace/ui/components/Code/ShareProject";
@@ -13,8 +13,7 @@ import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
 import { FiCopy } from "react-icons/fi";
 import type * as monaco from "monaco-editor";
-import { applyOps } from "@workspace/ui/lib/applyOps";
-import { nanoid } from "nanoid";
+
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
@@ -196,19 +195,24 @@ const MonacoEditor = ({
     [selectedFile?.content]
   );
 
-  
-
-  const [debouncedContent, setDebouncedContent] = useState<string>("");
-
+  // Use debounced content for WebSocket updates
   useDebounce(
     () => {
-      if (content && content !== currentFileContent && currentFilePath) {
-       
-        setDebouncedContent(content);
+      if (content && content !== currentFileContent && currentFilePath && socket && socket.readyState === WebSocket.OPEN) {
+        // Send debounced content updates to WebSocket
+        socket.send(
+          JSON.stringify({
+            type: "file_update",
+            payload: { 
+              content: content, 
+              filePath: currentFilePath 
+            },
+          })
+        );
       }
     },
-    750,
-    [content, currentFileContent, currentFilePath]
+    500, // 500ms debounce delay
+    [content, currentFileContent, currentFilePath, socket]
   );
 
   // Set theme based on current theme
@@ -218,8 +222,6 @@ const MonacoEditor = ({
       setTheme(newTheme);
     }
   }, [currTheme, theme]);
-
-  
 
   // Handle editor mount
   const handleEditorMount = useCallback(
@@ -282,136 +284,22 @@ const MonacoEditor = ({
     }
   }, [selectedFile, isEditorReady, currentFileContent]);
 
-  const opsRef = useRef<Ops[]>([]);
-  const bufferRef = useRef<CharObj[]>([]);
-  const isRemoteChangeRef = useRef(false);
-
+  // Listen for editor content changes
   useEffect(() => {
     if (!editorRef.current || !isEditorReady) return;
 
     const editor = editorRef.current;
 
-    const getPrevCharId = (offset: number): string | null => {
-      if (offset === 0) return null;
-      return bufferRef.current[offset - 1]?.id ?? null;
-    };
-
-    const generateOpsFromChange = (
-      change: monaco.editor.IModelContentChange
-    ): Ops[] => {
-      const timeStamp = new Date();
-      const ops: Ops[] = [];
-
-      if (change.rangeLength === 0) {
-        // INSERT
-        for (let i = 0; i < change.text.length; i++) {
-          ops.push({
-            type: "insert",
-            id: nanoid(),
-            timeStamp,
-            value: change.text[i] ?? "",
-            after: getPrevCharId(change.rangeOffset + i),
-          });
-        }
-      } else {
-        for (let i = 0; i < change.rangeLength; i++) {
-          const target = bufferRef.current[change.rangeOffset + i];
-          if (target) {
-            ops.push({
-              type: "delete",
-              id: target.id,
-              timeStamp,
-            });
-          }
-        }
-      }
-
-      return ops;
-    };
-
-    const disposable = editor.onDidChangeModelContent((e) => {
-      // Skip if this change was caused by a remote update
-      if (isRemoteChangeRef.current) return;
-
-      const allOps: Ops[] = [];
-
-      for (const change of e.changes) {
-        const ops = generateOpsFromChange(change);
-        allOps.push(...ops);
-      }
-
-      if (allOps.length === 0) return;
-
-      opsRef.current.push(...allOps);
-      bufferRef.current = applyOps(opsRef.current, true) as CharObj[];
-
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(
-          JSON.stringify({
-            type: "crdt_update",
-            payload: { ops: allOps, filePath: selectedFile?.path },
-          })
-        );
-      }
+    const disposable = editor.onDidChangeModelContent(() => {
+      const currentContent = editor.getValue();
+      setContent(currentContent);
+      // WebSocket sending is now handled by the debounced effect
     });
 
     return () => {
       disposable.dispose();
     };
-  }, [isEditorReady, socket]);
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleMessage = (event: MessageEvent) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.type !== "crdt_update_server_side") return;
-
-        const incomingOps: Ops[] = msg.payload.ops;
-        const path = msg.payload.filePath;
-        if (path !== selectedFile?.path) return;
-
-        opsRef.current.push(...incomingOps);
-        const newBuffer = applyOps(opsRef.current, true) as CharObj[];
-        const updatedContent = newBuffer.map((c) => c.value).join("");
-        bufferRef.current = newBuffer;
-
-        const editor = editorRef.current;
-        if (editor && editor.getValue() !== updatedContent) {
-          isRemoteChangeRef.current = true; // Set flag before update
-          const model = editor.getModel();
-          if (model) {
-            const selection = editor.getSelection();
-            model.pushEditOperations(
-              [],
-              [{ range: model.getFullModelRange(), text: updatedContent }],
-              () => (selection ? [selection] : null)
-            );
-          }
-          // Use setTimeout to ensure the flag is reset after current execution
-          setTimeout(() => {
-            isRemoteChangeRef.current = false;
-          }, 0);
-        }
-      } catch (error) {
-        isRemoteChangeRef.current = false; // Reset flag on error
-        console.error("Error handling CRDT update:", error);
-      }
-    };
-
-    socket.addEventListener("message", handleMessage);
-
-    return () => {
-      socket.removeEventListener("message", handleMessage);
-    };
-  }, [socket, selectedFile?.path]);
-
-
-  useEffect(() => {
-    opsRef.current = [];
-    bufferRef.current = [];
-  }, [selectedFile?.path]);
+  }, [isEditorReady, selectedFile?.path]);
 
   if (!selectedFile || selectedFile.type !== Type.FILE) {
     return null;

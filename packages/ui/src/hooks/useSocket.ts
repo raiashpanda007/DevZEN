@@ -19,11 +19,11 @@ export const useSocket = (url: string) => {
             ws.send(JSON.stringify({ type: MESSAGE_INIT, payload: { projectId: params.project } }));
             
         };
-        ws.onmessage = (event) =>{
-            const data = JSON.parse(event.data);
+        // ws.onmessage = (event) =>{
+        //     const data = JSON.parse(event.data);
 
-            console.log('WebSocket message received:', data.type);
-        }
+        //     console.log('WebSocket message received:', data.type);
+        // }
 
         
 

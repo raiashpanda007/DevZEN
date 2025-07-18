@@ -345,6 +345,12 @@ importers:
         specifier: ^5.6.3
         version: 5.7.2
 
+  packages/utils:
+    dependencies:
+      nanoid:
+        specifier: ^5.1.5
+        version: 5.1.5
+
 packages:
 
   '@alloc/quick-lru@5.2.0':

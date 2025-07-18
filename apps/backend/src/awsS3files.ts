@@ -17,7 +17,8 @@ const s3 = new S3Client({
         secretAccessKey: AWS_S3_SECRET_KEY,
     },
 });
-
+const homeDir = "/home/ashwin-rai/Projects/DevZen/apps/backend";
+const workspaceDir = path.join(homeDir, "workspace");
 export const getRootFilesandFolders = async (key: string, localPath: string) => {
     try {
         const listParams = { Bucket: AWS_S3_BUCKET_NAME, Prefix: key };
@@ -92,99 +93,46 @@ export function createFolder(dirName: string): Promise<void> {
     });
 }
 
-export const saveTheFile = async (key: string, filePath: string, content: string) => {
-    const params = {
-        Bucket: AWS_S3_BUCKET_NAME,
-        Key: key,
-        Body: content,
-    }
-    try {
-        await s3.send(new PutObjectCommand(params));
-        console.log("✅ File saved to S3:", key);
-    } catch (error) {
-        console.error("❌ Error saving file to S3:", error);
-    }
-}
+export async function uploadAllProjectsFromWorkspace() {
+  const projectDirs = fs.readdirSync(workspaceDir).filter((name) => {
+    const fullPath = path.join(workspaceDir, name);
+    return fs.statSync(fullPath).isDirectory();
+  });
 
+  for (const projectId of projectDirs) {
+    const localProjectPath = path.join(workspaceDir, projectId);
+    const files: string[] = [];
 
-export async function create_folder_file_s3(key: string) {
-    try {
-        const command = new PutObjectCommand(
-            {
-                Bucket: AWS_S3_BUCKET_NAME,
-                Key: key,
-                Body: "",
-            }
+    const walk = (dir: string) => {
+      const items = fs.readdirSync(dir);
+      for (const item of items) {
+        const fullPath = path.join(dir, item);
+        if (fs.statSync(fullPath).isDirectory()) {
+          walk(fullPath);
+        } else {
+          files.push(fullPath);
+        }
+      }
+    };
 
-        )
+    walk(localProjectPath);
 
-        await s3.send(command);
-        console.log("✅ Folder/file created in S3:", key);
-    } catch (error) {
-        console.error("❌ Error creating folder/file in S3:", error);
-    }
-}
+    for (const filePath of files) {
+      const relativePath = path.relative(localProjectPath, filePath).replace(/\\/g, "/");
+      const s3Key = `code/${projectId}/${relativePath}`;
 
-
-export async function delete_folder_file_s3(key: string) {
-    try {
-        const command = new DeleteObjectCommand({
-            Bucket: AWS_S3_BUCKET_NAME,
-            Key: key,
-        });
-
-        await s3.send(command);
-        console.log("✅ Folder/file deleted from S3:", key);
-    } catch (error) {
-        console.error("❌ Error deleting folder/file from S3:", error);
-    }
-}
-
-
-
-export async function rename_folder_file_s3(oldPrefix: string, newPrefix: string) {
-  try {
-    const listedObjects = await s3.send(
-      new ListObjectsV2Command({
-        Bucket: AWS_S3_BUCKET_NAME,
-        Prefix: oldPrefix
-      })
-    );
-
-    if (!listedObjects.Contents || listedObjects.Contents.length === 0) {
-      throw new Error(`No objects found with prefix ${oldPrefix}`);
-    }
-
-    
-    for (const object of listedObjects.Contents) {
-      if (!object.Key) continue;
-
-      const newKey = object.Key.replace(oldPrefix, newPrefix);
       await s3.send(
-        new CopyObjectCommand({
+        new PutObjectCommand({
           Bucket: AWS_S3_BUCKET_NAME,
-          CopySource: `${AWS_S3_BUCKET_NAME}/${object.Key}`,
-          Key: newKey
+          Key: s3Key,
+          Body: fs.createReadStream(filePath),
         })
       );
     }
 
-    
-    for (const object of listedObjects.Contents) {
-      if (!object.Key) continue;
-
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: AWS_S3_BUCKET_NAME,
-          Key: object.Key
-        })
-      );
-    }
-
-    console.log(`✅ Renamed S3 folder from ${oldPrefix} to ${newPrefix}`);
-  } catch (error) {
-    console.error("❌ Error renaming folder/file in S3:", error);
-    throw error;
+    console.log(`✅ Uploaded ${files.length} files for project '${projectId}'`);
   }
 }
+
+
 

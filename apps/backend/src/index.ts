@@ -1,8 +1,9 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
-import { getRootFilesandFolders } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent, CRUD_operations } from "./filesSystem";
-import getRedisInstance from "@workspace/queue"
+import { getRootFilesandFolders, uploadAllProjectsFromWorkspace } from "./awsS3files";
+import { fetchAllDirs, fetchFileContent, CRUD_operations,saveFileContent } from "./filesSystem";
+
+
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
 
@@ -21,13 +22,16 @@ wss.on("connection", (ws) => {
         MESSAGE_RENAME_FOLDER,
         MESSAGE_RENAME_FILE,
         MESSAGE_SAVE_FILE_CONTENT,
-        MESSAGE_CRDT_UPDATE
         
+
     } = Messages;
     console.log("New WebSocket connection established");
 
     ws.send(JSON.stringify({ type: "connected", payload: "WebSocket connection established" }));
-
+    ws.on("close",async () =>{
+        console.log("uploading data to s3")
+        await uploadAllProjectsFromWorkspace();
+    } )
     ws.on("message", async (data) => {
         try {
             const message = JSON.parse(data.toString());
@@ -65,12 +69,13 @@ wss.on("connection", (ws) => {
                         return;
                     }
                     const content = await fetchFileContent(`./${filePath}`);
-                    if (!content) {
+                    if (content == undefined) {
                         ws.send(JSON.stringify({ type: "Failure", payload: { message: "File not found" } }));
                         return;
                     }
 
-                    console.log("File content:", content);
+                    
+
 
                     ws.send(JSON.stringify({
                         type: RECIEVED_FILE_FETCH,
@@ -207,33 +212,24 @@ wss.on("connection", (ws) => {
                     })
                     break;
                 }
+                case MESSAGE_SAVE_FILE_CONTENT: {
+                    console.log("File saved", message.payload);
+                    const {content, filePath} = message.payload;
+                    try {
+                        
+                        const fileupate = await saveFileContent(filePath,content)
+                        
+                        
+                    } catch (error) {
+                        console.error("error in storing file info on server")
+                    }
+                    break;
+                }
                 default: {
                     ws.send(JSON.stringify({ type: "error", payload: "Unknown message type" }));
                     break;
                 }
-            case MESSAGE_SAVE_FILE_CONTENT:
-                console.log("Save message file content",message )
-                const {payload} = message;
                 
-                const {filePath , ops} = payload;
-                // Updated data in redis
-                await getRedisInstance.rpush(`ops:${filePath}`,JSON.stringify(ops));
-                
-
-                if(!payload) {
-                    ws.send(JSON.stringify({
-                        type:"Error no payload in crdt update file",
-                    }))
-                }
-                wss.clients.forEach((client) =>{
-                    if(client != ws && client.readyState === client.OPEN){
-                        client.send(JSON.stringify({
-                            type:MESSAGE_CRDT_UPDATE,
-                            payload
-                        }))
-                    }
-                })
-                break;
             }
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);

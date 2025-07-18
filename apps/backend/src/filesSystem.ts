@@ -6,7 +6,7 @@ export interface RemoteFile {
     name: string;
     path: string;
 }
-import { create_folder_file_s3,delete_folder_file_s3, rename_folder_file_s3 } from './awsS3files';
+
 
 const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
 
@@ -50,7 +50,7 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     });
 };
 
-export const fetchFileContent = async (file: string) => {
+export const fetchFileContent = async (file: string) : Promise<string> => {
 
 
     return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ export const Delete = async (path: string) => {
     const aboslutePath = homeDir + path;
     const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''));
 
-    await delete_folder_file_s3(cloudPath);
+    // await delete_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
         fs.rm(aboslutePath, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -82,8 +82,8 @@ export const Delete = async (path: string) => {
     });
 };
 export const createNewFile = async (path: string, name: string) => {
-    const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name);
-    await create_folder_file_s3(cloudPath);
+    // const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name);
+    // await create_folder_file_s3(cloudPath);
     const absolutePath = homeDir + path + '/' + name;
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, "", (err) => {
@@ -97,8 +97,8 @@ export const createNewFile = async (path: string, name: string) => {
 
 };
 export const createNewFolder = async (path: string, name: string) => {
-    const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name ,'/');
-    await create_folder_file_s3(cloudPath);
+    // const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name ,'/');
+    // await create_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
 
         const aboslutePath = homeDir + path + '/' + name;
@@ -112,11 +112,11 @@ export const createNewFolder = async (path: string, name: string) => {
     })
 };
 export const renameFile = async (key: string, newName: string) => {
-    const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''));
+    // const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''));
     const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
 
-    const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName);
-    await rename_folder_file_s3(oldCloudPath, newCloudPath);
+    // const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName);
+    // await rename_folder_file_s3(oldCloudPath, newCloudPath);
     
     const absolutePath = homeDir + key;
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
@@ -133,12 +133,12 @@ export const renameFile = async (key: string, newName: string) => {
 };
 
 export const renameFolder = async (key: string, newName: string) => {
-    const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''),  '/');
+    // const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''),  '/');
     const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
 
     const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName, '/');
-    await rename_folder_file_s3(oldCloudPath, newCloudPath);
-    console.log("Renaming folder in S3 from:", oldCloudPath, "to:", newCloudPath);
+    // await rename_folder_file_s3(oldCloudPath, newCloudPath);
+    // console.log("Renaming folder in S3 from:", oldCloudPath, "to:", newCloudPath);
 
     const absolutePath = p.join(homeDir, key);
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
@@ -156,6 +156,7 @@ export const renameFolder = async (key: string, newName: string) => {
 
 export const saveFileContent = async (path: string, content: string) => {
     const absolutePath = p.join(homeDir,path);
+    console.log("Absolute file path while ",absolutePath);
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, content, "utf8", (err) => {
             if (err) {
