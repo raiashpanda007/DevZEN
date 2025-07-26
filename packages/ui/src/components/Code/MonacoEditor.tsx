@@ -13,11 +13,18 @@ import { Input } from "@workspace/ui/components/input";
 import { Button } from "@workspace/ui/components/button";
 import { FiCopy } from "react-icons/fi";
 import type * as monaco from "monaco-editor";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@workspace/ui/components/resizable";
+import { TerminalComponent } from "@workspace/ui/components/Code/Terminal";
 
 interface MonacoEditorProps {
   selectedFile: FileTypes | undefined;
   setSelectedFile: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
   socket: WebSocket | null;
+  projectId: string;
 }
 
 interface SharedDialogBoxProps {
@@ -38,7 +45,7 @@ const ShareDialogBox = ({ URL, setSharedDialogBox }: SharedDialogBoxProps) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
-      <div className=" dark:bg-black bg-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md mx-auto p-6 transform transition-all duration-300 scale-100">
+      <div className="dark:bg-black bg-white rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 w-full max-w-md mx-auto p-6 transform transition-all duration-300 scale-100">
         {/* Header */}
         <div className="text-center mb-6">
           <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
@@ -176,15 +183,20 @@ const MonacoEditor = ({
   selectedFile,
   setSelectedFile,
   socket,
+  projectId,
 }: MonacoEditorProps) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const monacoRef = useRef<typeof import("monaco-editor") | null>(null);
   const [content, setContent] = useState<string>("");
   const [theme, setTheme] = useState<string>("vs-light");
   const [sharedDialogBox, setSharedDialogBox] = useState(false);
+  const [visibleStatusConsole, setVisibleStatusConsole] = useState(false);
   const [shareURL, setShareURL] = useState<string | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
   const { theme: currTheme } = useTheme();
+
+  // Convert IdId to string for terminal component
+
 
   const currentFilePath = useMemo(
     () => selectedFile?.path,
@@ -198,14 +210,20 @@ const MonacoEditor = ({
   // Use debounced content for WebSocket updates
   useDebounce(
     () => {
-      if (content && content !== currentFileContent && currentFilePath && socket && socket.readyState === WebSocket.OPEN) {
+      if (
+        content &&
+        content !== currentFileContent &&
+        currentFilePath &&
+        socket &&
+        socket.readyState === WebSocket.OPEN
+      ) {
         // Send debounced content updates to WebSocket
         socket.send(
           JSON.stringify({
             type: "file_update",
-            payload: { 
-              content: content, 
-              filePath: currentFilePath 
+            payload: {
+              content: content,
+              filePath: currentFilePath,
             },
           })
         );
@@ -301,6 +319,16 @@ const MonacoEditor = ({
     };
   }, [isEditorReady, selectedFile?.path]);
 
+  // Trigger layout update when console visibility changes
+  useEffect(() => {
+    if (editorRef.current && isEditorReady) {
+      // Small delay to ensure DOM has updated
+      setTimeout(() => {
+        editorRef.current?.layout();
+      }, 100);
+    }
+  }, [visibleStatusConsole, isEditorReady]);
+
   if (!selectedFile || selectedFile.type !== Type.FILE) {
     return null;
   }
@@ -312,37 +340,123 @@ const MonacoEditor = ({
   }
 
   return (
-    <div className="relative">
-      <Editor
-        className="relative"
-        height="750px"
-        theme={theme}
-        value={content}
-        onMount={handleEditorMount}
-        options={{
-          fontSize: 14,
-          minimap: { enabled: true },
-          automaticLayout: true,
-          wordWrap: "on",
-          scrollBeyondLastLine: false,
-          selectOnLineNumbers: true,
-          roundedSelection: false,
-          readOnly: false,
-          cursorStyle: "line",
-        }}
-        loading={
-          <div className="flex items-center justify-center h-full">
-            Loading editor...
-          </div>
-        }
-      />
-      <div className="flex w-full">
+    <div className="flex flex-col h-full w-full overflow-hidden">
+      {/* Button Bar - Fixed at top */}
+      <div className="flex w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 z-10 flex-shrink-0">
         <Run />
-        <Console />
+        <Console setVisibleStatus={setVisibleStatusConsole} />
         <ShareProjectButton
           setSharedDialogBox={setSharedDialogBox}
           setShareURL={setShareURL}
         />
+      </div>
+
+      {/* Main Content Area - Takes remaining height */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {visibleStatusConsole ? (
+          <ResizablePanelGroup
+            direction="vertical"
+            className="h-full w-full"
+          >
+            {/* Editor Panel */}
+            <ResizablePanel defaultSize={70} minSize={30}>
+              <div className="h-full w-full overflow-hidden">
+                <Editor
+                  className="relative"
+                  height="100%"
+                  theme={theme}
+                  value={content}
+                  onMount={handleEditorMount}
+                  options={{
+                    fontSize: 14,
+                    minimap: { enabled: true },
+                    automaticLayout: true,
+                    wordWrap: "on",
+                    scrollBeyondLastLine: false,
+                    selectOnLineNumbers: true,
+                    roundedSelection: false,
+                    readOnly: false,
+                    cursorStyle: "line",
+                    smoothScrolling: true,
+                    scrollbar: {
+                      vertical: "auto",
+                      horizontal: "auto",
+                      useShadows: false,
+                      verticalHasArrows: false,
+                      horizontalHasArrows: false,
+                      verticalScrollbarSize: 10,
+                      horizontalScrollbarSize: 10,
+                    },
+                  }}
+                  loading={
+                    <div className="flex items-center justify-center h-full">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                          Loading editor...
+                        </span>
+                      </div>
+                    </div>
+                  }
+                />
+              </div>
+            </ResizablePanel>
+
+            {/* Resizable Handle */}
+            <ResizableHandle withHandle />
+
+            {/* Terminal Panel - Replace Console Panel */}
+            <ResizablePanel defaultSize={30} minSize={15} maxSize={60}>
+              <TerminalComponent
+                socket={socket}
+                projectId={projectId}
+                visible={visibleStatusConsole}
+              />
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        ) : (
+          /* Editor Only View */
+          <div className="h-full w-full overflow-hidden">
+            <Editor
+              className="relative"
+              height="100%"
+              theme={theme}
+              value={content}
+              onMount={handleEditorMount}
+              options={{
+                fontSize: 14,
+                minimap: { enabled: true },
+                automaticLayout: true,
+                wordWrap: "on",
+                scrollBeyondLastLine: false,
+                selectOnLineNumbers: true,
+                roundedSelection: false,
+                readOnly: false,
+                cursorStyle: "line",
+                smoothScrolling: true,
+                scrollbar: {
+                  vertical: "auto",
+                  horizontal: "auto",
+                  useShadows: false,
+                  verticalHasArrows: false,
+                  horizontalHasArrows: false,
+                  verticalScrollbarSize: 10,
+                  horizontalScrollbarSize: 10,
+                },
+              }}
+              loading={
+                <div className="flex items-center justify-center h-full">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Loading editor...
+                    </span>
+                  </div>
+                </div>
+              }
+            />
+          </div>
+        )}
       </div>
     </div>
   );

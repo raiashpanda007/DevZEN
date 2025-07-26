@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "tsbuild": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js ",
+    "tsbuild": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js  --external:node-pty",
     "dev": "node dist/index.js",
     "start": "pnpm tsbuild && pnpm dev"
   },
@@ -20,6 +20,8 @@
     "@types/express": "^5.0.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "node-pty": "^1.0.0",
+    "uuid": "^11.1.0",
     "ws": "^8.18.1"
   }
 }

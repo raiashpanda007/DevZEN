@@ -1,13 +1,17 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
 import { getRootFilesandFolders, uploadAllProjectsFromWorkspace } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent, CRUD_operations,saveFileContent } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
+import { TerminalManager } from "./pty";
+import { v4 as uuidv4 } from 'uuid';
 
 
 const PORT = 8080;
 const wss = new WebSocketServer({ port: PORT });
-
+const terminal = new TerminalManager();
+const randomUUID = uuidv4();
 wss.on("connection", (ws) => {
+
     const {
         MESSAGE_INIT,
         DIR_FETCH,
@@ -22,16 +26,19 @@ wss.on("connection", (ws) => {
         MESSAGE_RENAME_FOLDER,
         MESSAGE_RENAME_FILE,
         MESSAGE_SAVE_FILE_CONTENT,
-        
+        MESSAGE_REQUEST_TERMINAL,
+        MESSAGE_UPDATE_TERMINAL
+
 
     } = Messages;
     console.log("New WebSocket connection established");
 
     ws.send(JSON.stringify({ type: "connected", payload: "WebSocket connection established" }));
-    ws.on("close",async () =>{
+    ws.on("close", async () => {
         console.log("uploading data to s3")
+        terminal.clear(randomUUID)
         await uploadAllProjectsFromWorkspace();
-    } )
+    })
     ws.on("message", async (data) => {
         try {
             const message = JSON.parse(data.toString());
@@ -74,7 +81,7 @@ wss.on("connection", (ws) => {
                         return;
                     }
 
-                    
+
 
 
                     ws.send(JSON.stringify({
@@ -214,23 +221,54 @@ wss.on("connection", (ws) => {
                 }
                 case MESSAGE_SAVE_FILE_CONTENT: {
                     console.log("File saved", message.payload);
-                    const {content, filePath} = message.payload;
+                    const { content, filePath } = message.payload;
                     try {
-                        
-                        const fileupate = await saveFileContent(filePath,content)
-                        
-                        
+
+                        const fileupdate = await saveFileContent(filePath, content)
+                        console.log("File update ", filePath)
+
                     } catch (error) {
                         console.error("error in storing file info on server")
                     }
+                    break;
+                }
+                case MESSAGE_REQUEST_TERMINAL: {
+                    const { projectId } = message.payload;
+                    if (!projectId) {
+                        ws.send(
+                            JSON.stringify({
+                                type: 'Error',
+                                payload: 'Please provide projectId for creating terminal'
+                            })
+                        )
+                        break;
+                    }
+                    terminal.createPty(randomUUID, projectId, (data, pid) => {
+                        ws.send(JSON.stringify({ type: 'terminal:data', data: Buffer.from(data, 'utf-8').toString('utf-8'), pid }));
+                    })
+                    console.log("Terminal started and working");
+                    break;
+                }
+                case MESSAGE_UPDATE_TERMINAL: {
+                    const { data } = message.payload;
+                    if (!data) {
+                        ws.send(JSON.stringify({
+                            type: "Error",
+                            payload: "Please provide data "
+                        }))
+                        break;
+                    }
+                    terminal.write(randomUUID, data);
+                    console.log("Updated terminal");
                     break;
                 }
                 default: {
                     ws.send(JSON.stringify({ type: "error", payload: "Unknown message type" }));
                     break;
                 }
-                
+
             }
+
         } catch (err) {
             console.error("Error parsing WebSocket message:", err);
             ws.send(JSON.stringify({ type: "error", payload: "Invalid message format" }));
@@ -240,7 +278,8 @@ wss.on("connection", (ws) => {
 
 console.log(`📡 WebSocket server running on ws://localhost:${PORT}`);
 wss.on("close", () => {
-    console.log("WebSocket connection closed");
+    console.log("WebSocket connection closed and cleaning terminal");
+    terminal.clear(randomUUID);
 });
 wss.on("error", (error) => {
     console.error("WebSocket error:", error);

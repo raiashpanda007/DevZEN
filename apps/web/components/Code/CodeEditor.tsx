@@ -10,6 +10,7 @@ import { useState,useEffect } from "react";
 import { useSocket } from "@workspace/ui/hooks/useSocket";
 import DialogBox from "@workspace/ui/components/Code/DialogBox";
 import {useDispatch} from "react-redux";
+import { useParams } from "next/navigation";
 import { loadinghandler } from "@/store/Loader";
 
 
@@ -37,6 +38,12 @@ function CodeEditor() {
   const [typeDialog, setTypeDialog] = useState<string>("");
   const [path, setPath] = useState<File | undefined>();
   const dispatch = useDispatch();
+  const params  = useParams();
+  const {project } = params;
+
+   useEffect(() => {
+      if(!project || !project[0]) return
+    }, [project]);
 
 
   const {socket} = useSocket(process.env.NEXT_PUBLIC_SOCKET_URL || "")
@@ -63,7 +70,7 @@ function CodeEditor() {
 }, [socket]);
 
   return (
-    <div className="w-full h-full flex overflow-hidden">
+    <div className="w-full h-[calc(100vh-96px)] flex overflow-hidden">
       {dialogOpen && (
         <DialogBox
           loaderState={dialogOpen}
@@ -83,14 +90,15 @@ function CodeEditor() {
         socket={socket}
       />
 
-      <div className="w-4/5 ">
-        <Suspense  fallback={<div>Loading editor...</div>}>
-        <MonacoEditor
-          selectedFile={selectedFile}
-          setSelectedFile={setSelectedFile}
-          socket = {socket}
-        />
-      </Suspense>
+      <div className="flex-1 h-full overflow-hidden">
+        <Suspense fallback={<div>Loading editor...</div>}>
+          <MonacoEditor
+            selectedFile={selectedFile}
+            setSelectedFile={setSelectedFile}
+            socket={socket}
+            projectId={Array.isArray(project) ? project[0] ?? "" : project ?? ""}
+          />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service_name
+spec:
+  selector:
+    replicas: 1
+    matchLabels:
+      app: service_name
+  template:
+    metadata:
+      labels:
+        app: service_name
+    spec:
+      volumes:
+        - name: workspace-volume
+          emptyDir: {}
+      initContainers:
+        - name: copy-s3-resources
+          image: amazon/aws-cli
+          command: ["bin/sh", "-c"]
+          args:
+            - >
+              aws s3 cp s3://devzencodefiles/code/service_name/ /workspace/ --recursive &&
+              echo "Resources copied from S3";
+          env_file:
+            - .env
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /workspace
+      containers:
+        - name: "ashwin-docker/runner"
+        
+

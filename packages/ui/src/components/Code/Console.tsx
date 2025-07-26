@@ -2,9 +2,15 @@
 import {Button} from "@workspace/ui/components/button";
 import { Terminal } from "lucide-react";
 
-function Console() {
+
+
+interface ConsoleProps {
+  setVisibleStatus:  React.Dispatch<React.SetStateAction<boolean>>
+}
+function Console({setVisibleStatus}:ConsoleProps) {
+
   return (
-    <Button>
+    <Button onClick={()=>setVisibleStatus((prev)=>!prev)}>
         Console <Terminal/>
     </Button>
   )
