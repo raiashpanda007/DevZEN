@@ -84,45 +84,51 @@ export const deleteFolder = async (folderName: string): Promise<void> => {
         throw new Error("❌ AWS_S3_BUCKET_NAME is missing from environment variables.");
     }
 
-    const prefix = folderName.endsWith("/") ? `code/${folderName}` : `code/${folderName}/`;
-    let continuationToken: string | undefined = undefined;
+    try {
+        const prefix = folderName.endsWith("/") ? `code/${folderName}` : `code/${folderName}/`;
+        let continuationToken: string | undefined = undefined;
 
-    while (true) {
-        const listParams: ListObjectsV2CommandInput = {
-            Bucket: AWS_S3_BUCKET_NAME,
-            Prefix: prefix,
-            ContinuationToken: continuationToken,
-        };
+        while (true) {
+            const listParams: ListObjectsV2CommandInput = {
+                Bucket: AWS_S3_BUCKET_NAME,
+                Prefix: prefix,
+                ContinuationToken: continuationToken,
+            };
 
-        const listCommand = new ListObjectsV2Command(listParams);
-        const listResponse: ListObjectsV2CommandOutput = await s3.send(listCommand);
+            const listCommand = new ListObjectsV2Command(listParams);
+            const listResponse: ListObjectsV2CommandOutput = await s3.send(listCommand);
 
-        const contents = listResponse.Contents;
+            const contents = listResponse.Contents;
 
-        if (!contents || contents.length === 0) {
-            console.log(`✅ No more objects to delete under '${prefix}'`);
-            break;
+            if (!contents || contents.length === 0) {
+                console.log(`✅ No more objects to delete under '${prefix}'`);
+                break;
+            }
+
+            const deleteParams: DeleteObjectsCommandInput = {
+                Bucket: AWS_S3_BUCKET_NAME,
+                Delete: {
+                    Objects: contents.map(obj => ({ Key: obj.Key! })),
+                    Quiet: false,
+                },
+            };
+
+            const deleteCommand = new DeleteObjectsCommand(deleteParams);
+            const deleteResponse = await s3.send(deleteCommand);
+
+            console.log(`🗑️ Deleted ${deleteResponse.Deleted?.length || 0} objects from '${prefix}'`);
+
+            if (!listResponse.IsTruncated || !listResponse.NextContinuationToken) {
+                break;
+            }
+
+            continuationToken = listResponse.NextContinuationToken;
+            console.log(`✅ Finished deleting all objects under '${prefix}'`);
         }
+    } catch (error) {
+        console.log("Error in deleting the project ", error);
 
-        const deleteParams: DeleteObjectsCommandInput = {
-            Bucket: AWS_S3_BUCKET_NAME,
-            Delete: {
-                Objects: contents.map(obj => ({ Key: obj.Key! })),
-                Quiet: false,
-            },
-        };
-
-        const deleteCommand = new DeleteObjectsCommand(deleteParams);
-        const deleteResponse = await s3.send(deleteCommand);
-
-        console.log(`🗑️ Deleted ${deleteResponse.Deleted?.length || 0} objects from '${prefix}'`);
-
-        if (!listResponse.IsTruncated || !listResponse.NextContinuationToken) {
-            break;
-        }
-
-        continuationToken = listResponse.NextContinuationToken;
     }
 
-    console.log(`✅ Finished deleting all objects under '${prefix}'`);
+
 };
