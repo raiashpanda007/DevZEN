@@ -75,6 +75,73 @@ This will start:
 
 ---
 
+## 🏗️ Project Architecture & Flow
+
+### High-Level Architecture
+
+- **Frontend (`apps/web/`)**  
+  Next.js app with Monaco Editor, file explorer, and terminal UI. Communicates with backend via REST and WebSockets.
+
+- **Backend (`apps/backend/`)**  
+  Node.js server using WebSockets for real-time file system operations, project workspace management, and PTY terminal streaming.
+
+- **Server (`apps/server/`)**  
+  Express.js server for project provisioning, S3 file management, and (future) AI assistant endpoints.
+
+- **Database (`packages/db/`)**  
+  PostgreSQL managed via Prisma ORM. Stores users, projects, templates, and share codes.
+
+- **Monorepo (Turborepo)**  
+  Orchestrates builds, linting, and dependency management across all apps and packages.
+
+---
+
+### Project Flow
+
+1. **Authentication**  
+   Users must sign in to access their dashboard and projects.
+
+2. **Project Creation**  
+   - User creates a project from a template.
+   - Backend provisions workspace, copies starter code from S3, and sets up the project directory.
+
+3. **Workspace Initialization**  
+   - Frontend connects to backend via WebSocket.
+   - File tree is loaded and sent to the client.
+   - Monaco Editor is initialized.
+
+4. **File System Operations**  
+   - Users create, rename, and delete files/folders.
+   - Actions are sent over WebSocket to backend, which updates the workspace and persists changes.
+   - **File data is sent after compressing and then decompressed on the receiving end** to optimize transfer and storage.
+
+5. **Code Editing**  
+   - Files are edited in Monaco Editor.
+   - Changes are sent to backend and saved.
+   - **Live multi-user editing is not implemented**; only one user edits at a time.
+
+6. **Terminal Access**  
+   - Each project has a dedicated PTY terminal, streamed over WebSocket.
+
+7. **Project Sharing**  
+   - Users can generate a share link for their project.
+   - Anyone with the link can access the project in restricted mode.
+
+---
+
+### ❌ Skipped / Not Yet Implemented
+
+- **Live Collaboration:**  
+  Real-time, multi-user editing (like VS Code Live Share) is **not yet implemented**. Only one user edits at a time; changes are not broadcast live to other sessions.
+
+- **AI Assistant:**  
+  Context-aware AI code suggestions are planned but not yet available.
+
+- **Advanced Access Controls:**  
+  More granular permissions and workspace roles are planned for future releases.
+
+---
+
 ## 🧩 Features
 
 - 🔁 Real-time collaboration using WebSockets
