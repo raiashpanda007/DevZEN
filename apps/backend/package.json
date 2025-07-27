@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.775.0",
+    "@types/adm-zip": "^0.5.7",
     "@types/express": "^5.0.1",
+    "adm-zip": "^0.5.16",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "node-pty": "^1.0.0",

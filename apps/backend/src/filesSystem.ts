@@ -1,11 +1,13 @@
 import fs from 'fs';
-import  p from 'path';
+import p from 'path';
 
 export interface RemoteFile {
     type: "file" | "dir";
     name: string;
     path: string;
 }
+
+import AdmZip from "adm-zip"
 
 
 const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
@@ -25,6 +27,7 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
             const promises = dirents.map((dirent) => {
                 const filePath = `${dir}/${dirent.name}`;
                 if (dirent.isDirectory()) {
+
                     results.push({
                         type: "dir",
                         name: dirent.name,
@@ -50,7 +53,7 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     });
 };
 
-export const fetchFileContent = async (file: string) : Promise<string> => {
+export const fetchFileContent = async (file: string): Promise<string> => {
 
 
     return new Promise((resolve, reject) => {
@@ -67,9 +70,6 @@ export const fetchFileContent = async (file: string) : Promise<string> => {
 
 export const Delete = async (path: string) => {
     const aboslutePath = homeDir + path;
-    const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''));
-
-    // await delete_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
         fs.rm(aboslutePath, { recursive: true, force: true }, (err) => {
             if (err) {
@@ -82,8 +82,6 @@ export const Delete = async (path: string) => {
     });
 };
 export const createNewFile = async (path: string, name: string) => {
-    // const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name);
-    // await create_folder_file_s3(cloudPath);
     const absolutePath = homeDir + path + '/' + name;
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, "", (err) => {
@@ -97,8 +95,6 @@ export const createNewFile = async (path: string, name: string) => {
 
 };
 export const createNewFolder = async (path: string, name: string) => {
-    // const cloudPath = p.posix.join('code', path.replace(/^\/?workspace\/?/, ''), name ,'/');
-    // await create_folder_file_s3(cloudPath);
     return new Promise((resolve, reject) => {
 
         const aboslutePath = homeDir + path + '/' + name;
@@ -112,12 +108,7 @@ export const createNewFolder = async (path: string, name: string) => {
     })
 };
 export const renameFile = async (key: string, newName: string) => {
-    // const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''));
-    const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
 
-    // const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName);
-    // await rename_folder_file_s3(oldCloudPath, newCloudPath);
-    
     const absolutePath = homeDir + key;
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
     console.log("Renaming file from:", absolutePath, "to:", newNamePath);
@@ -133,12 +124,6 @@ export const renameFile = async (key: string, newName: string) => {
 };
 
 export const renameFolder = async (key: string, newName: string) => {
-    // const oldCloudPath = p.posix.join('code', key.replace(/^\/?workspace\/?/, ''),  '/');
-    const newKey = key.slice(0, key.lastIndexOf('/')) + '/' ;
-
-    const newCloudPath = p.posix.join('code', newKey.replace(/^\/?workspace\/?/, ''), newName, '/');
-    // await rename_folder_file_s3(oldCloudPath, newCloudPath);
-    // console.log("Renaming folder in S3 from:", oldCloudPath, "to:", newCloudPath);
 
     const absolutePath = p.join(homeDir, key);
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
@@ -155,8 +140,8 @@ export const renameFolder = async (key: string, newName: string) => {
 };
 
 export const saveFileContent = async (path: string, content: string) => {
-    const absolutePath = p.join(homeDir,path);
-    console.log("Absolute file path while ",absolutePath);
+    const absolutePath = p.join(homeDir, path);
+    console.log("Absolute file path while ", absolutePath);
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, content, "utf8", (err) => {
             if (err) {
@@ -169,6 +154,41 @@ export const saveFileContent = async (path: string, content: string) => {
 
 }
 
+export const CompressFolder = async () => {
+    const workspaceDir = p.join(homeDir, 'workspace');
+    try {
+        const folders = fs.readdirSync(workspaceDir).filter((name) => {
+            const completePath = p.join(workspaceDir, name);
+            return fs.statSync(completePath).isDirectory();
+        })
+        if (folders.length !== 1) {
+            console.error("Expecting one folder to compress");
+            return;
+        }
+        const projectId = folders[0];
+        if (!projectId) {
+            console.error("Can't find the folder to compress");
+            return;
+        }
+        const projectPath = p.join(workspaceDir, projectId);
+        const zip = new AdmZip();
+        const items = fs.readdirSync(projectPath);
+        for (const item of items) {
+            const fullPath = p.join(projectPath, item);
+            const relativePath = item;
+            if (fs.statSync(fullPath).isDirectory()) {
+                zip.addLocalFolder(fullPath, relativePath);
+            } else {
+                zip.addLocalFile(fullPath, "", relativePath);
+            }
+            const outputZipPath = p.join(projectPath, `${projectId}.zip`);
+            zip.writeZip(outputZipPath);
+        }
+    } catch (error) {
+        console.error("Error in compressing folder", error)
+    }
+
+}
 
 export const CRUD_operations = {
     createNewFile,

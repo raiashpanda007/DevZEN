@@ -1,9 +1,10 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand,DeleteObjectCommand, CopyObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, ListObjectsV2Command, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import path from "path";
+import { CompressFolder } from "./filesSystem";
 
 const AWS_S3_REGION = process.env.AWS_S3_REGION || "";
 const AWS_S3_BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME || "";
@@ -94,10 +95,14 @@ export function createFolder(dirName: string): Promise<void> {
 }
 
 export async function uploadAllProjectsFromWorkspace() {
+  console.log("Compressing folder");
+  await CompressFolder();
+  console.log("Compressed folder");
   const projectDirs = fs.readdirSync(workspaceDir).filter((name) => {
     const fullPath = path.join(workspaceDir, name);
     return fs.statSync(fullPath).isDirectory();
   });
+  
 
   for (const projectId of projectDirs) {
     const localProjectPath = path.join(workspaceDir, projectId);
