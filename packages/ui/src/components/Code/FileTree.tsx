@@ -18,12 +18,13 @@ interface FileTreeProps {
   setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setTypeDialog: React.Dispatch<React.SetStateAction<string >>;
   setPath: React.Dispatch<React.SetStateAction<FileTypes | undefined>>;
+  onBeforeFileChange?: () => void; // Add this prop
 }
 
 export const FileTree = (props: FileTreeProps) => {
   return (
     <div className="max-h-full overflow-y-auto text-black dark:text-white">
-      <SubTree directory={props.rootDir} {...props} />
+      <SubTree directory={props.rootDir} {...props} onBeforeFileChange={props.onBeforeFileChange} />
     </div>
   );
 };
@@ -40,7 +41,7 @@ interface SubTreeProps {
 
 }
 
-const SubTree = (props: SubTreeProps) => {
+const SubTree = (props: SubTreeProps & { onBeforeFileChange?: () => void }) => {
   return (
     <div>
       {props.directory.dirs.sort(sortDir).map((dir) => (
@@ -62,13 +63,17 @@ const SubTree = (props: SubTreeProps) => {
           <FileDiv
             file={file}
             selectedFile={props.selectedFile}
-            onClick={() => props.onSelect(file)}
-            socket ={props.socket}
+            onClick={() => {
+              if (!props.selectedFile || props.selectedFile.id !== file.id) {
+                if (props.onBeforeFileChange) props.onBeforeFileChange();
+                props.onSelect(file);
+              }
+            }}
+            socket={props.socket}
             dialogOpen={props.dialogOpen}
             setDialogOpen={props.setDialogOpen}
             setTypeDialog={props.setTypeDialog}
             setPath={props.setPath}
-
           />
         </React.Fragment>
       ))}
@@ -175,13 +180,10 @@ const DirDiv = ({
         icon={open ? "openDirectory" : "closedDirectory"}
         selectedFile={selectedFile}
         onClick={() => {
-          console.log("Clicked on: ", directory.name);
-          if (!open) {
-            onSelect(directory);
-          }
+          // Only toggle open/close, do not set directory as selectedFile
           setOpen(!open);
         }}
-        socket = {socket}
+        socket={socket}
         dialogOpen={dialogOpen}
         setDialogOpen={setDialogOpen}
         setTypeDialog={setTypeDialog}

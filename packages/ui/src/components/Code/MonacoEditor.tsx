@@ -325,9 +325,34 @@ const MonacoEditor = ({
       // Small delay to ensure DOM has updated
       setTimeout(() => {
         editorRef.current?.layout();
-      }, 100);
+        // Force a model refresh to restore syntax highlighting
+        const model = editorRef.current?.getModel();
+        if (model && monacoRef.current) {
+          const language = getLanguageFromFileName(selectedFile?.name || '');
+          monacoRef.current.editor.setModelLanguage(model, language);
+        }
+      }, 150); // Increased delay slightly
     }
-  }, [visibleStatusConsole, isEditorReady]);
+  }, [visibleStatusConsole, isEditorReady, selectedFile?.name]);
+
+  const sendImmediateUpdate = useCallback(() => {
+    if (
+      content &&
+      selectedFile &&
+      socket &&
+      socket.readyState === WebSocket.OPEN
+    ) {
+      socket.send(
+        JSON.stringify({
+          type: "file_update",
+          payload: {
+            content: content,
+            filePath: selectedFile.path,
+          },
+        })
+      );
+    }
+  }, [content, selectedFile, socket]);
 
   if (!selectedFile || selectedFile.type !== Type.FILE) {
     return null;

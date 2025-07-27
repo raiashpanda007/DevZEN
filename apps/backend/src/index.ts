@@ -36,8 +36,8 @@ wss.on("connection", (ws) => {
     ws.send(JSON.stringify({ type: "connected", payload: "WebSocket connection established" }));
     ws.on("close", async () => {
         console.log("uploading data to s3")
-        terminal.clear(randomUUID)
         await uploadAllProjectsFromWorkspace();
+        terminal.clear(randomUUID)
     })
     ws.on("message", async (data) => {
         try {
@@ -277,9 +277,10 @@ wss.on("connection", (ws) => {
 });
 
 console.log(`📡 WebSocket server running on ws://localhost:${PORT}`);
-wss.on("close", () => {
+wss.on("close", async () => {
     console.log("WebSocket connection closed and cleaning terminal");
     terminal.clear(randomUUID);
+    await uploadAllProjectsFromWorkspace();
 });
 wss.on("error", (error) => {
     console.error("WebSocket error:", error);
