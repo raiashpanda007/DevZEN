@@ -3,8 +3,8 @@ kind: Deployment
 metadata:
   name: service_name
 spec:
+  replicas: 1
   selector:
-    replicas: 1
     matchLabels:
       app: service_name
   template:
@@ -29,6 +29,21 @@ spec:
             - name: workspace-volume
               mountPath: /workspace
       containers:
-        - name: "ashwin-docker/runner"
+        - name: ashwin/devzen-backend
+          image: ashpanda007/devzen-backend
+          ports: 
+            - containerPort: 8081
+            - containerPort: 8080
+          volumeMounts:
+            - name: workspace/volume
+              mountPath: /workspace
+          resources:
+            requests:
+              cpu: "1"
+              memory: "1Gi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"
+
         
 
