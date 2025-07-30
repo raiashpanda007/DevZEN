@@ -35,5 +35,5 @@ npm-debug.log*
 .DS_Store
 *.pem
 
-./apps/Server/k8s/secrets.prod.yml
+apps/Server/k8s/secrets.prod.yml
 ./apps/backend/workspace
