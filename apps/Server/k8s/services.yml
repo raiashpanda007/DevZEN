@@ -18,23 +18,23 @@ spec:
       initContainers:
         - name: copy-s3-resources
           image: amazon/aws-cli
-          command: ["bin/sh", "-c"]
+          command: ["/bin/sh", "-c"]
           args:
             - >
               aws s3 cp s3://devzencodefiles/code/service_name/ /workspace/ --recursive &&
               echo "Resources copied from S3";
           env:
-            - name: AWS_S3_ACCESS_KEY
+            - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: aws-secret-prod
                   key: AWS_S3_ACCESS_KEY
-            - name: AWS_S3_SECRET_KEY
+            - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: aws-secret-prod
                   key: AWS_S3_SECRET_KEY
-            - name: AWS_S3_REGION
+            - name: AWS_DEFAULT_REGION
               valueFrom:
                 secretKeyRef:
                   name: aws-secret-prod
@@ -56,7 +56,6 @@ spec:
         - name: ashwin-devzen-backend
           image: ashpanda007/devzen-backend
           ports: 
-            - containerPort: 8081
             - containerPort: 8080
           volumeMounts:
             - name: workspace-volume
@@ -69,5 +68,39 @@ spec:
               cpu: "1"
               memory: "1Gi"
 
-        
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service_name
+spec:
+  selector:
+    app: service_name
+  ports:
+    - protocol: TCP
+      name: service_name
+      port: 8080
+      targetPort: 8080
+--- 
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: service_name
+spec: 
+  ingressClassName: nginx
+  rules:
+  - host: devzen.ashprojects.tech
+    http: 
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: service_name
+              port:
+                number: 8080
+
+
 
