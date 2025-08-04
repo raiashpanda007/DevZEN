@@ -88,19 +88,24 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: service_name
+  annotations:
+      nginx.ingress.kubernetes.io/enable-websocket: "true"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
 spec: 
   ingressClassName: nginx
   rules:
-  - host: devzen.ashprojects.tech
-    http: 
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: service_name
-              port:
-                number: 8080
+    - host: devzen.ashprojects.tech
+      http: 
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: service_name
+                port:
+                  number: 8080
 
 
 
