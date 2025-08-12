@@ -44,9 +44,15 @@ function CodeEditor() {
    useEffect(() => {
       if(!project || !project[0]) return
     }, [project]);
+    if(!process.env.NEXT_PUBLIC_SOCKET_URL) {
+      return ;
+    }
+    const socketurl = process.env.NEXT_PUBLIC_SOCKET_URL.split("//");
+    const wsServerURL = socketurl[0]+"//"+project+'.'+socketurl[1];
 
-
-  const {socket} = useSocket(process.env.NEXT_PUBLIC_SOCKET_URL || "")
+    console.log("socket url ; " , wsServerURL)
+    
+  const {socket} = useSocket(wsServerURL || "")
  useEffect(() => {
   if (!socket) return;
 

@@ -1,15 +1,30 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
-import { getRootFilesandFolders, uploadAllProjectsFromWorkspace } from "./awsS3files";
+import {  uploadAllProjectsFromWorkspace } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
 import { TerminalManager } from "./pty";
 import { v4 as uuidv4 } from 'uuid';
+import express from "express";
+import http from "http";
 
 
 const PORT = 8080;
-const wss = new WebSocketServer({ port: PORT });
+
+// Create Express app and HTTP server
+const app = express();
+const server = http.createServer(app);
+
+// Attach WebSocketServer to the same HTTP server (optionally under a path)
+const wss = new WebSocketServer({ server, path: "/ws" });
+
 const terminal = new TerminalManager();
 const randomUUID = uuidv4();
+
+// Simple health route (optional)
+app.get("/healthz", (_req, res) => {
+    res.json({ status: "ok" });
+});
+
 wss.on("connection", (ws) => {
 
     const {
@@ -51,7 +66,6 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: "Project ID is required" }));
                         return;
                     }
-                    await getRootFilesandFolders(`code/${projectId}`, `./workspace/${projectId}`);
                     const dirs = await fetchAllDirs(`/workspace/${projectId}`);
                     ws.send(JSON.stringify({
                         type: RECEIVED_INIT_DIR_FETCH,
@@ -62,8 +76,8 @@ wss.on("connection", (ws) => {
 
                 case DIR_FETCH: {
                     const { dir } = message.payload;
-
-                    const dirs = await fetchAllDirs(`/workspace/${dir}`);
+                    const target = dir.startsWith('/workspace') ? dir : `/workspace/${dir}`;
+                    const dirs = await fetchAllDirs(target);
                     ws.send(JSON.stringify({ type: RECEIVED_DIR_FETCH, payload: dirs }));
                     break;
                 }
@@ -75,15 +89,12 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: { message: "Improper file path" } }));
                         return;
                     }
-                    const content = await fetchFileContent(`./${filePath}`);
+                    const normalized = filePath.startsWith('/workspace') ? filePath : `/workspace/${filePath.replace(/^\.\/?/, '')}`;
+                    const content = await fetchFileContent(normalized);
                     if (content == undefined) {
                         ws.send(JSON.stringify({ type: "Failure", payload: { message: "File not found" } }));
                         return;
                     }
-
-
-
-
                     ws.send(JSON.stringify({
                         type: RECIEVED_FILE_FETCH,
                         payload: { message: "File fetched successfully", content }
@@ -276,7 +287,12 @@ wss.on("connection", (ws) => {
     });
 });
 
-console.log(`📡 WebSocket server running on ws://localhost:${PORT}`);
+// Start the shared HTTP server (Express + WebSocket)
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 HTTP server running on http://localhost:${PORT}`);
+    console.log(`📡 WebSocket server running on ws://localhost:${PORT}/ws`);
+});
+
 wss.on("close", async () => {
     console.log("WebSocket connection closed and cleaning terminal");
     terminal.clear(randomUUID);

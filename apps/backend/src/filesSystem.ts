@@ -9,12 +9,17 @@ export interface RemoteFile {
 
 import AdmZip from "adm-zip"
 
+// Base directory now points directly to the mounted workspace root
+const homeDir = '/workspace';
+const workspaceRoot = homeDir; // Project folders live directly under /workspace
 
-const homeDir = '/home/ashwin-rai/Projects/DevZen/apps/backend';
+const resolvePath = (input: string) => (
+    input.startsWith('/workspace') ? input : p.join(homeDir, input)
+);
 
 export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     return new Promise((resolve, reject) => {
-        const absolutePath = p.join(homeDir, dir);
+        const absolutePath = resolvePath(dir);
         console.log("Resolved path:", absolutePath);
 
         fs.readdir(absolutePath, { withFileTypes: true }, async (err, dirents) => {
@@ -54,14 +59,12 @@ export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
 };
 
 export const fetchFileContent = async (file: string): Promise<string> => {
-
-
+    const absolutePath = resolvePath(file);
     return new Promise((resolve, reject) => {
-        fs.readFile(file, "utf8", (err, data) => {
+        fs.readFile(absolutePath, "utf8", (err, data) => {
             if (err) {
                 reject(err);
             } else {
-
                 resolve(data);
             }
         });
@@ -69,9 +72,9 @@ export const fetchFileContent = async (file: string): Promise<string> => {
 };
 
 export const Delete = async (path: string) => {
-    const aboslutePath = homeDir + path;
+    const absolutePath = resolvePath(path);
     return new Promise((resolve, reject) => {
-        fs.rm(aboslutePath, { recursive: true, force: true }, (err) => {
+        fs.rm(absolutePath, { recursive: true, force: true }, (err) => {
             if (err) {
                 reject(err);
                 console.error("Error deleting file or folder:", err);
@@ -81,8 +84,9 @@ export const Delete = async (path: string) => {
         });
     });
 };
+
 export const createNewFile = async (path: string, name: string) => {
-    const absolutePath = homeDir + path + '/' + name;
+    const absolutePath = resolvePath(p.join(path, name));
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, "", (err) => {
             if (err) {
@@ -92,24 +96,23 @@ export const createNewFile = async (path: string, name: string) => {
             }
         });
     });
-
 };
-export const createNewFolder = async (path: string, name: string) => {
-    return new Promise((resolve, reject) => {
 
-        const aboslutePath = homeDir + path + '/' + name;
-        fs.mkdir(aboslutePath, { recursive: true }, (err) => {
+export const createNewFolder = async (path: string, name: string) => {
+    const absolutePath = resolvePath(p.join(path, name));
+    return new Promise((resolve, reject) => {
+        fs.mkdir(absolutePath, { recursive: true }, (err) => {
             if (err) {
                 reject(err);
             } else {
                 resolve(true);
             }
         });
-    })
+    });
 };
-export const renameFile = async (key: string, newName: string) => {
 
-    const absolutePath = homeDir + key;
+export const renameFile = async (key: string, newName: string) => {
+    const absolutePath = resolvePath(key);
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
     console.log("Renaming file from:", absolutePath, "to:", newNamePath);
     return new Promise((resolve, reject) => {
@@ -124,8 +127,7 @@ export const renameFile = async (key: string, newName: string) => {
 };
 
 export const renameFolder = async (key: string, newName: string) => {
-
-    const absolutePath = p.join(homeDir, key);
+    const absolutePath = resolvePath(key);
     const newNamePath = absolutePath.slice(0, absolutePath.lastIndexOf('/')) + '/' + newName;
     console.log("Renaming Folder from:", absolutePath, "to:", newNamePath);
     return new Promise((resolve, reject) => {
@@ -140,7 +142,7 @@ export const renameFolder = async (key: string, newName: string) => {
 };
 
 export const saveFileContent = async (path: string, content: string) => {
-    const absolutePath = p.join(homeDir, path);
+    const absolutePath = resolvePath(path);
     console.log("Absolute file path while ", absolutePath);
     return new Promise((resolve, reject) => {
         fs.writeFile(absolutePath, content, "utf8", (err) => {
@@ -151,12 +153,10 @@ export const saveFileContent = async (path: string, content: string) => {
             }
         });
     });
-
 }
 
 export const CompressFolder = async () => {
-    const workspaceDir = p.join(homeDir, 'workspace');
-    // Ensure workspaceDir exists
+    const workspaceDir = workspaceRoot;
     if (!fs.existsSync(workspaceDir)) {
         fs.mkdirSync(workspaceDir, { recursive: true });
     }
@@ -199,22 +199,6 @@ export const CompressFolder = async () => {
         console.error("Error in compressing folder", error)
     }
 }
-
-
-export const UncompressFolder = async (keyPath: string) => {
-    const projectId = p.basename(keyPath);
-
-    const zipFilePath = p.join(keyPath, `${projectId}.zip`);
-    const outputPath = keyPath;
-    fs.rmSync(p.join(homeDir, zipFilePath));
-    try {
-        const zip = new AdmZip(zipFilePath);
-        zip.extractAllTo(outputPath, true);
-        console.log("Decompressed successfully:", outputPath);
-    } catch (error) {
-        console.error(" Failed to decompress the folder:", error);
-    }
-};
 
 export const CRUD_operations = {
     createNewFile,

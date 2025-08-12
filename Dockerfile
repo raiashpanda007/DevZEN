@@ -2,7 +2,7 @@ FROM node:24-alpine3.21 AS builder
 
 # Install pnpm and build dependencies
 RUN npm install -g pnpm
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache python3 make g++ bash
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN pnpm --filter ./apps/backend... build
 FROM node:24-alpine3.21 AS production
 
 RUN npm install -g pnpm && \
-    apk add --no-cache python3 make g++ && \
+    apk add --no-cache python3 make g++ bash && \
     addgroup -g 1001 -S nodejs && \
     adduser -S backend -u 1001
 
@@ -53,9 +53,9 @@ RUN pnpm install --prod --frozen-lockfile && pnpm store prune && rm -rf /root/.p
 RUN mkdir -p /workspace
 
 # Set permissions and user
-RUN chown -R backend:nodejs /app
+RUN chown -R backend:nodejs /app /workspace
 USER backend
 
 EXPOSE 8080
-WORKDIR /app/apps/backend
-CMD ["node", "dist/index.js"]
+WORKDIR /workspace
+ENTRYPOINT ["node", "/app/apps/backend/dist/index.js"]

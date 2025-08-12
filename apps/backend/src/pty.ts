@@ -1,7 +1,9 @@
 import { spawn , IPty } from "node-pty";
-
+import p from "path";
 
 const SHELL = 'bash';
+const homeDir = '/workspace';
+const workspaceRoot = homeDir; // projects now directly under /workspace
 
 type Session = {
   terminal: IPty;
@@ -12,10 +14,11 @@ export class TerminalManager {
   private sessions: Record<string, Session> = {};
 
   createPty(id: string, projectId: string, onData: (data: string, pid: number) => void): IPty {
+    const cwd = p.join(workspaceRoot, projectId);
     const term = spawn(SHELL, [], {
       cols: 100,
       rows: 30,
-      cwd: `workspace/${projectId}`,
+      cwd,
       name: 'xterm-color',
       env: process.env,
     });

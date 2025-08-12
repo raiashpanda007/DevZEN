@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: service_name
+  labels:
+    app: service_name
 spec:
   replicas: 1
   selector:
@@ -17,12 +19,48 @@ spec:
           emptyDir: {}
       initContainers:
         - name: copy-s3-resources
-          image: amazon/aws-cli
-          command: ["/bin/sh", "-c"]
+          image: amazon/aws-cli:latest
+          command: ["/bin/sh","-c"]
           args:
-            - >
-              aws s3 cp s3://devzencodefiles/code/service_name/ /workspace/ --recursive &&
-              echo "Resources copied from S3";
+            - |
+              set -e
+              aws s3 cp s3://devzencodefiles/code/service_name/ /workspace/ --recursive
+              echo "Resources copied from S3"
+              (command -v unzip >/dev/null 2>&1 || yum install -y unzip >/dev/null 2>&1 || true)
+              (command -v tar >/dev/null 2>&1 || yum install -y tar >/dev/null 2>&1 || true)
+              # Extract .tar.gz archives
+              for f in /workspace/*.tar.gz; do
+                [ -e "$f" ] || continue
+                echo "Extracting $f"
+                tar -xzf "$f" -C /workspace
+                rm -f "$f"
+              done
+              # Extract .zip archives
+              for f in /workspace/*.zip; do
+                [ -e "$f" ] || continue
+                echo "Unzipping $f"
+                unzip -qo "$f" -d /workspace
+                rm -f "$f"
+              done
+              # Normalize first depth to /workspace/service_name
+              TARGET_DIR=/workspace/service_name
+              if [ ! -d "$TARGET_DIR" ]; then
+                set +e
+                top_items=$(ls -1A /workspace | grep -Ev '(\.tar\.gz|\.zip)$' || true)
+                set -e
+                count=$(printf "%s\n" "$top_items" | sed '/^$/d' | wc -l)
+                if [ "$count" -eq 1 ] && [ -d "/workspace/$top_items" ]; then
+                  # Single directory -> rename to service_name
+                  mv "/workspace/$top_items" "$TARGET_DIR"
+                else
+                  mkdir -p "$TARGET_DIR"
+                  for i in $top_items; do
+                    [ "$i" = "service_name" ] && continue
+                    mv "/workspace/$i" "$TARGET_DIR"/
+                  done
+                fi
+              fi
+              echo "Decompression complete"
           env:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
@@ -48,64 +86,74 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: aws-secret-prod
-                  key: AWS_S3_BUCKET_URL    
+                  key: AWS_S3_BUCKET_URL
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
       containers:
-        - name: ashwin-devzen-backend
-          image: ashpanda007/devzen-backend
-          ports: 
+        - name: backend
+          image: ashpanda007/devzen-backend:latest
+          ports:
             - containerPort: 8080
+          env:
+            - name: PORT
+              value: "8080"
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
           resources:
             requests:
-              cpu: "1"
-              memory: "1Gi"
+              cpu: "250m"
+              memory: "256Mi"
             limits:
               cpu: "1"
               memory: "1Gi"
-
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
   name: service_name
+  labels:
+    app: service_name
 spec:
   selector:
     app: service_name
   ports:
-    - protocol: TCP
-      name: service_name
+    - name: http
+      protocol: TCP
       port: 8080
       targetPort: 8080
---- 
-
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: service_name
   annotations:
-      nginx.ingress.kubernetes.io/enable-websocket: "true"
-      nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-      nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
-spec: 
+    nginx.ingress.kubernetes.io/enable-websocket: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
   ingressClassName: nginx
   rules:
-    - host: devzen.ashprojects.tech
-      http: 
+    - host: service_name.devzen.ashprojects.tech
+      http:
         paths:
-          - path: /
+          - path: /ws
             pathType: Prefix
             backend:
               service:
                 name: service_name
                 port:
                   number: 8080
-
-
-

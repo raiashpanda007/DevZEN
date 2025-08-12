@@ -23,9 +23,9 @@ app.use(
 
 const kubeconfig = new KubeConfig();
 if (process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT) {
-  kubeconfig.loadFromCluster(); // Inside a pod
+    kubeconfig.loadFromCluster(); // Inside a pod
 } else {
-  kubeconfig.loadFromDefault(); // Local dev
+    kubeconfig.loadFromDefault(); // Local dev
 }
 const coreV1Api = kubeconfig.makeApiClient(CoreV1Api);
 const appsV1Api = kubeconfig.makeApiClient(AppsV1Api);
@@ -70,7 +70,18 @@ app.post('/project', async (req, res) => {
             res.status(400).send("Invalid request body");
             return;
         }
+
+        // 1. Copy template code to project path in S3 BEFORE deploying
+        console.log(`Copying base template base_code_files/${language} -> code/${projectId}`);
+        await copyFolder(`base_code_files/${language}`, `code/${projectId}`);
+        console.log("Template copy completed.");
+
+        // 2. Prepare manifests (service_name -> projectId)
         const kubeManifests = readAndParseYAMLFiles(path.join(__dirname, "../k8s/services.yml"), projectId);
+        console.log("Services.yml:");
+        console.dir(kubeManifests, { depth: null });
+
+        // 3. Create Kubernetes resources
         for (const manifest of kubeManifests) {
             try {
                 console.log(`Creating ${manifest.kind} → ${manifest.metadata?.name}`);
@@ -95,12 +106,10 @@ app.post('/project', async (req, res) => {
                 }
             }
         }
-        await copyFolder(`base_code_files/${language}`, `code/${projectId}`);
     } catch (error) {
         console.error("Error in creating project:", error);
         res.status(500).send("Error creating project");
         return;
-
     }
 
     res.send("Project created");

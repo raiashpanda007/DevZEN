@@ -17,7 +17,7 @@ const {MESSAGE_REQUEST_TERMINAL, MESSAGE_UPDATE_TERMINAL} = Messages;
 const OPTIONS_TERM = {
   cursorBlink: true,
   fontSize: 14,
-  fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+  fontFamily: 'Fira Mono, Menlo, Monaco, "Ubuntu Mono", monospace',
   lineHeight: 1.2,
   theme: {
     background: "#1e1e1e",
@@ -81,11 +81,11 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
 
     setIsTerminalReady(true);
 
-    // Handle terminal input - FIXED: Use MESSAGE_UPDATE_TERMINAL for input data
+    // Handle terminal input
     const handleData = (data: string) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
-          type: MESSAGE_UPDATE_TERMINAL, // Changed from MESSAGE_REQUEST_TERMINAL
+          type: MESSAGE_UPDATE_TERMINAL,
           payload: { data }
         }));
       }
@@ -112,7 +112,7 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
       fitAddonRef.current = null;
       setIsTerminalReady(false);
     };
-  }, [visible, socket, projectId]); // Added socket and projectId to dependencies
+  }, [visible, socket, projectId]);
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -121,8 +121,6 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
     const handleMessage = (event: MessageEvent) => {
       try {
         const message = JSON.parse(event.data);
-        
-        // Listen for terminal data from backend
         if (message.type === 'terminal:data' && terminalInstanceRef.current) {
           const data = message.data;
           if (typeof data === 'string') {
@@ -147,7 +145,6 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
   // Request terminal when component mounts and socket is ready
   useEffect(() => {
     if (socket && socket.readyState === WebSocket.OPEN && projectId && isTerminalReady) {
-      console.log('Requesting terminal for project:', projectId);
       socket.send(JSON.stringify({
         type: MESSAGE_REQUEST_TERMINAL,
         payload: { projectId }
@@ -176,7 +173,7 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
           <div className="w-3 h-3 rounded-full bg-red-500"></div>
           <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
           <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span className="ml-2 text-sm font-medium text-gray-300">
+          <span className="ml-2 text-sm font-medium text-blue-300">
             Terminal - {projectId}
           </span>
         </div>
@@ -192,7 +189,8 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
           className="w-full h-full"
           style={{ 
             padding: '8px',
-            backgroundColor: '#1e1e1e'
+            backgroundColor: '#1e1e1e',
+            fontFamily: 'Fira Mono, Menlo, Monaco, "Ubuntu Mono", monospace'
           }}
         />
       </div>

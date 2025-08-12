@@ -42,7 +42,6 @@ export const copyFolder = async (
             ContinuationToken: continuationToken
         };
 
-        console.log("📤 Sending request to list objects...");
         const command = new ListObjectsV2Command(listParams);
         const data = await s3.send(command);
 
@@ -51,25 +50,36 @@ export const copyFolder = async (
             return;
         }
 
+        // Derive projectId from destinationPrefix (e.g. code/myProject -> myProject)
+        const trimmedDest = destinationPrefix.replace(/\/$/, "");
+        const projectId = trimmedDest.split("/").pop();
+        if (!projectId) {
+            throw new Error("Cannot derive projectId from destinationPref.eix");
+        }
+
+        let copied = false;
+
         for (const file of data.Contents) {
             if (!file.Key) continue;
-
-
             if (!file.Key.startsWith(listParams.Prefix)) continue;
+            if (!file.Key.endsWith(".zip")) continue; // only consider zip files
 
-            const fileName = file.Key.slice(listParams.Prefix.length);
-            if (!fileName) continue;
+            const destKey = `${trimmedDest}/${projectId}.zip`;
 
-            const destination = `${destinationPrefix.replace(/\/$/, "")}/${fileName.replace(/^\//, "")}`;
             const copyParams = {
                 Bucket: AWS_S3_BUCKET_NAME,
                 CopySource: `${AWS_S3_BUCKET_NAME}/${file.Key}`,
-                Key: destination,
+                Key: destKey,
             };
 
-            console.log(`📂 Copying: ${file.Key} → ${destination}`);
-            const copyCommand = new CopyObjectCommand(copyParams);
-            await s3.send(copyCommand);
+            console.log(`📂 Copying (renaming) ${file.Key} → ${destKey}`);
+            await s3.send(new CopyObjectCommand(copyParams));
+            copied = true;
+            break; // only need the first zip
+        }
+
+        if (!copied) {
+            console.warn("⚠️ No .zip file found to copy.");
         }
 
         return data;
