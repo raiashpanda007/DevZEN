@@ -14,20 +14,27 @@ spec:
       labels:
         app: service_name
     spec:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
       volumes:
         - name: workspace-volume
           emptyDir: {}
       initContainers:
         - name: copy-s3-resources
-          image: amazon/aws-cli:latest
+          image: ashpanda007/aws-cli-devzen:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
           command: ["/bin/sh","-c"]
           args:
             - |
               set -e
+              set -x
               aws s3 cp s3://devzencodefiles/code/service_name/ /workspace/ --recursive
               echo "Resources copied from S3"
-              (command -v unzip >/dev/null 2>&1 || yum install -y unzip >/dev/null 2>&1 || true)
-              (command -v tar >/dev/null 2>&1 || yum install -y tar >/dev/null 2>&1 || true)
               # Extract .tar.gz archives
               for f in /workspace/*.tar.gz; do
                 [ -e "$f" ] || continue
@@ -93,6 +100,14 @@ spec:
       containers:
         - name: backend
           image: ashpanda007/devzen-backend:latest
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
           ports:
             - containerPort: 8080
           env:
@@ -106,7 +121,7 @@ spec:
               cpu: "250m"
               memory: "256Mi"
             limits:
-              cpu: "1"
+              cpu: "500m"
               memory: "1Gi"
           readinessProbe:
             httpGet:
