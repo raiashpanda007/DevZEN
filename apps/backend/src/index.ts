@@ -261,16 +261,13 @@ wss.on("connection", (ws) => {
                     break;
                 }
                 case MESSAGE_UPDATE_TERMINAL: {
-                    const { data } = message.payload;
-                    if (!data) {
-                        ws.send(JSON.stringify({
-                            type: "Error",
-                            payload: "Please provide data "
-                        }))
-                        break;
+                    const { data, resize } = message.payload || {};
+                    if (resize && resize.cols && resize.rows) {
+                        terminal.resize(randomUUID, resize.cols, resize.rows);
                     }
-                    terminal.write(randomUUID, data);
-                    console.log("Updated terminal");
+                    if (data) {
+                        terminal.write(randomUUID, data);
+                    }
                     break;
                 }
                 default: {

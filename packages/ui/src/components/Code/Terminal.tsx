@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
@@ -48,71 +48,73 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
   const terminalRef = useRef<HTMLDivElement | null>(null);
   const terminalInstanceRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
   const [isTerminalReady, setIsTerminalReady] = useState(false);
+
+  const sendResize = useCallback(() => {
+    const term = terminalInstanceRef.current;
+    if (!term || !socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(JSON.stringify({
+      type: MESSAGE_UPDATE_TERMINAL,
+      payload: { resize: { cols: term.cols, rows: term.rows } }
+    }));
+  }, [socket]);
+
+  const fitAndResize = useCallback(() => {
+    const fitAddon = fitAddonRef.current;
+    if (!fitAddon) return;
+    fitAddon.fit();
+    sendResize();
+  }, [sendResize]);
 
   useEffect(() => {
     if (!terminalRef.current || !visible) return;
-
-    // Create terminal instance
     const term = new Terminal(OPTIONS_TERM);
     const fitAddon = new FitAddon();
     const webLinksAddon = new WebLinksAddon();
     const searchAddon = new SearchAddon();
-
-    // Load addons
     term.loadAddon(fitAddon);
     term.loadAddon(webLinksAddon);
     term.loadAddon(searchAddon);
-
-    // Open terminal
     term.open(terminalRef.current);
     fitAddon.fit();
-
-    // Store references
     terminalInstanceRef.current = term;
     fitAddonRef.current = fitAddon;
-
-    // Welcome message
+    // initial resize -> backend pty
+    sendResize();
     term.writeln('\x1b[32m╭─────────────────────────────────────╮\x1b[0m');
     term.writeln('\x1b[32m│          DevZen Terminal           │\x1b[0m');
     term.writeln('\x1b[32m╰─────────────────────────────────────╯\x1b[0m');
     term.writeln('');
     term.writeln('\x1b[36mConnecting to terminal...\x1b[0m');
-
     setIsTerminalReady(true);
 
-    // Handle terminal input
-    const handleData = (data: string) => {
+    const dataDisp = term.onData((data: string) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
           type: MESSAGE_UPDATE_TERMINAL,
-          payload: { data }
+            payload: { data }
         }));
       }
-    };
+    });
 
-    term.onData(handleData);
+    // Observe container size changes (splits, sidebar toggle, etc.)
+    const ro = new ResizeObserver(() => {
+      // rAF avoids layout thrash
+      requestAnimationFrame(fitAndResize);
+    });
+    ro.observe(terminalRef.current);
+    resizeObserverRef.current = ro;
 
-    // Handle resize
-    const handleResize = () => {
-      if (fitAddon) {
-        setTimeout(() => {
-          fitAddon.fit();
-        }, 100);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Cleanup function
     return () => {
-      window.removeEventListener('resize', handleResize);
+      dataDisp.dispose();
+      ro.disconnect();
       term.dispose();
       terminalInstanceRef.current = null;
       fitAddonRef.current = null;
       setIsTerminalReady(false);
     };
-  }, [visible, socket, projectId]);
+  }, [visible, socket, projectId, fitAndResize, sendResize]);
 
   // Handle WebSocket messages
   useEffect(() => {
@@ -152,21 +154,25 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
     }
   }, [socket, projectId, isTerminalReady]);
 
-  // Handle fit when visibility changes
+  // Refocus / refit when becoming visible
   useEffect(() => {
-    if (visible && fitAddonRef.current && terminalInstanceRef.current) {
-      setTimeout(() => {
-        fitAddonRef.current?.fit();
-      }, 100);
+    if (visible) {
+      setTimeout(() => fitAndResize(), 50);
     }
-  }, [visible]);
+  }, [visible, fitAndResize]);
 
-  if (!visible) {
-    return null;
-  }
+  // Optional: if xterm itself emits resize (not strictly needed but safe)
+  useEffect(() => {
+    const term = terminalInstanceRef.current;
+    if (!term) return;
+    const disp = term.onResize(() => sendResize());
+    return () => disp.dispose();
+  }, [sendResize, isTerminalReady]);
+
+  if (!visible) return null;
 
   return (
-    <div className="h-full w-full bg-[#1e1e1e] flex flex-col">
+    <div className="h-full w-full bg-[#1e1e1e] flex flex-col min-h-0">
       {/* Terminal Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#2d2d30] border-b border-gray-600">
         <div className="flex items-center gap-2">
@@ -183,11 +189,11 @@ export const TerminalComponent = ({ socket, projectId, visible = true }: Termina
       </div>
 
       {/* Terminal Content */}
-      <div className="flex-1 overflow-hidden">
-        <div 
-          ref={terminalRef} 
+      <div className="flex-1 overflow-hidden min-h-0">
+        <div
+          ref={terminalRef}
           className="w-full h-full"
-          style={{ 
+          style={{
             padding: '8px',
             backgroundColor: '#1e1e1e',
             fontFamily: 'Fira Mono, Menlo, Monaco, "Ubuntu Mono", monospace'

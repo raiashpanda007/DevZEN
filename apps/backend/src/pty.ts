@@ -43,6 +43,13 @@ export class TerminalManager {
     this.sessions[terminalId]?.terminal.write(data);
   }
 
+  resize(terminalId: string, cols: number, rows: number): void {
+    const session = this.sessions[terminalId];
+    if (session) {
+      session.terminal.resize(cols, rows);
+    }
+  }
+
   clear(terminalId: string): void {
     const session = this.sessions[terminalId];
     if (session) {
