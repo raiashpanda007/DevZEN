@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
 import {  uploadAllProjectsFromWorkspace } from "./awsS3files";
-import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent } from "./filesSystem";
+import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent, UncompressFolder } from "./filesSystem";
 import { TerminalManager } from "./pty";
 import { v4 as uuidv4 } from 'uuid';
 import express from "express";
@@ -66,6 +66,9 @@ wss.on("connection", (ws) => {
                         ws.send(JSON.stringify({ type: "error", payload: "Project ID is required" }));
                         return;
                     }
+
+                    await UncompressFolder(`/workspace/${projectId}`);
+
                     const dirs = await fetchAllDirs(`/workspace/${projectId}`);
                     ws.send(JSON.stringify({
                         type: RECEIVED_INIT_DIR_FETCH,

@@ -17,6 +17,19 @@ const resolvePath = (input: string) => (
     input.startsWith('/workspace') ? input : p.join(homeDir, input)
 );
 
+export const UncompressFolder = async (projectPath: string) => {
+    const projectId = p.basename(projectPath);
+    const zipFilePath = p.join(projectPath, `${projectId}.zip`);
+    try {
+        const zip = new AdmZip(zipFilePath);
+        zip.extractAllTo(projectPath, true);
+        fs.rmSync(zipFilePath); // Remove only the zip file after extraction
+        console.log("Decompressed successfully:", zipFilePath);
+    } catch (error) {
+        console.error("Failed to decompress the folder:", error);
+    }
+};
+
 export const fetchAllDirs = (dir: string): Promise<RemoteFile[]> => {
     return new Promise((resolve, reject) => {
         const absolutePath = resolvePath(dir);
@@ -199,6 +212,8 @@ export const CompressFolder = async () => {
         console.error("Error in compressing folder", error)
     }
 }
+
+
 
 export const CRUD_operations = {
     createNewFile,
