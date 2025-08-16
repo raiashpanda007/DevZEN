@@ -1,6 +1,6 @@
 import express from 'express';
 import { copyFolder, deleteFolder } from './aws';
-import { z as zod } from 'zod';
+import { any, z as zod } from 'zod';
 import fs from "fs";
 import yaml from "yaml";
 import cors from "cors";
@@ -14,6 +14,9 @@ const PORT = process.env.PORT || 3001;
 const CreateProjectSchemaBackend = zod.object({
     projectId: zod.string().nonempty(),
     language: zod.string().nonempty(),
+})
+export const StartProjectSchema = zod.object({
+  projectId:zod.string().nonempty(),
 })
 app.use(express.json());
 app.use(
@@ -78,8 +81,7 @@ app.post('/project', async (req, res) => {
 
         // 2. Prepare manifests (service_name -> projectId)
         const kubeManifests = readAndParseYAMLFiles(path.join(__dirname, "../k8s/services.yml"), projectId);
-        console.log("Services.yml:");
-        console.dir(kubeManifests, { depth: null });
+
 
         // 3. Create Kubernetes resources
         for (const manifest of kubeManifests) {
@@ -112,7 +114,55 @@ app.post('/project', async (req, res) => {
         return;
     }
 
+
     res.send("Project created");
+});
+
+app.post('/start', async (req, res): Promise<any> => {
+    const namespace = "default";
+    const parsedBody = StartProjectSchema.safeParse(req.body);
+    if (!parsedBody.success) {
+        return res.status(400).json("Please provide project id to start project");
+    }
+    const { projectId } = parsedBody.data;
+    try {
+        const kubeManifests = readAndParseYAMLFiles(path.join(__dirname, "../k8s/services.yml"), projectId);
+        for (const manifest of kubeManifests) {
+            try {
+                console.log(`Creating ${manifest.kind} → ${manifest.metadata?.name}`);
+                switch (manifest.kind) {
+                    case "Deployment":
+                        await appsV1Api.createNamespacedDeployment({ namespace, body: manifest });
+                        break;
+                    case "Service":
+                        await coreV1Api.createNamespacedService({ namespace, body: manifest });
+                        break;
+                    case "Ingress":
+                        await networkingV1Api.createNamespacedIngress({ namespace, body: manifest });
+                        break;
+                    default:
+                        console.log(`Unsupported kind: ${manifest.kind}`);
+                }
+            } catch (err: any) {
+                if (err?.response?.statusCode === 409) {
+                    console.warn(`${manifest.kind} already exists for ${projectId}`);
+                    // Do NOT send a response here!
+                } else {
+                    // Log and rethrow, but do NOT send a response here!
+                    console.error(`Error creating ${manifest.kind}:`, err);
+                    throw err;
+                }
+            }
+        }
+        // Only send response once, after all manifests processed
+        res.status(200).send("Project started");
+    } catch (error) {
+        console.error("Unable to start your project", error);
+        // Only send error response if not already sent
+        if (!res.headersSent) {
+            res.status(500).send("Unable to start your project");
+        }
+    }
 });
 
 app.delete('/project', async (req, res): Promise<any> => {

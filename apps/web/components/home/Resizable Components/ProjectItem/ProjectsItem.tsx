@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { ProjectItem } from "@workspace/types";
 import { DeleteProjectButton } from "./DeleteProjectButton";
 import { DownloadProjectButton } from "./DownloadButton";
+import axios from "axios";
 
 function ProjectsItem({
   name = "ashwin",
@@ -17,13 +18,25 @@ function ProjectsItem({
   );
 
   const router = useRouter();
+  const onClick = async () => {
+    try {
+      const startContainer = await axios.post(
+        `${process.env.NEXT_PUBLIC_BASE_URL_SERVER}/start`,
+        { projectId: id }
+      );
+      console.log(startContainer.data);
+      router.push(`/projects/${id}`);
+    } catch (error) {
+      console.error("Error in starting pod");
+      throw error;
+    }
+  };
 
   return (
     <div className="flex h-20 items-center justify-between gap-2 w-full border mx-1 rounded-md shadow-md my-2 cursor-pointer hover:dark:bg-gray-800 hover:bg-slate-300 px-2 py-1">
-      
       <div
         className="flex items-center gap-2 overflow-hidden min-w-0 basis-2/3 sm:basis-3/4"
-        onClick={() => router.push(`/projects/${id}`)}
+        onClick={onClick}
       >
         <img
           src={templateImg}
@@ -45,7 +58,6 @@ function ProjectsItem({
         </div>
       </div>
 
-      
       <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 basis-1/3 sm:basis-1/4 justify-end">
         <DeleteProjectButton projectId={id} />
         <DownloadProjectButton />

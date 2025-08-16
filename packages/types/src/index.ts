@@ -13,6 +13,7 @@ export const VerifyProjectSchemaWeb = zod.object({
 })
 
 
+
 export const GenerateShareURLSchemaWeb = zod.object({
   projectId:zod.string().nonempty()
 })
