@@ -1,6 +1,6 @@
 import express from 'express';
 import { copyFolder, deleteFolder } from './aws';
-import { any, z as zod } from 'zod';
+import {  z as zod } from 'zod';
 import fs from "fs";
 import yaml from "yaml";
 import cors from "cors";
