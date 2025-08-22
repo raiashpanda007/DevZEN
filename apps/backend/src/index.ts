@@ -1,6 +1,6 @@
 import { WebSocketServer } from "ws";
 import { Messages } from "@workspace/types";
-import {  uploadAllProjectsFromWorkspace } from "./awsS3files";
+import { uploadAllProjectsFromWorkspace } from "./awsS3files";
 import { fetchAllDirs, fetchFileContent, CRUD_operations, saveFileContent, UncompressFolder } from "./filesSystem";
 import { TerminalManager } from "./pty";
 import { v4 as uuidv4 } from 'uuid';
@@ -14,17 +14,22 @@ const PORT = 8080;
 const app = express();
 const server = http.createServer(app);
 
-// Attach WebSocketServer to the same HTTP server (optionally under a path)
 const wss = new WebSocketServer({ server, path: "/ws" });
 
 const terminal = new TerminalManager();
 const randomUUID = uuidv4();
 
-// Simple health route (optional)
+
 app.get("/healthz", (_req, res) => {
     res.json({ status: "ok" });
 });
-
+app.get("/metrics", (_req, res) => {
+    console.log(wss.clients.size);
+    res.status(200).json({
+        message: "Number of connection :: ",
+        data: wss.clients.size
+    })
+})
 wss.on("connection", (ws) => {
 
     const {
