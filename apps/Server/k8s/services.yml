@@ -172,3 +172,10 @@ spec:
                 name: service_name
                 port:
                   number: 8080
+          - path: /metrics
+            pathType: Prefix
+            backend:
+              service:
+                name: service_name
+                port:
+                  number: 8080

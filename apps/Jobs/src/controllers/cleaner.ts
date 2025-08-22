@@ -67,11 +67,13 @@ async function CheckNumberOfConnections(PodName: string) {
 }
 
 export async function CleanPods() {
+    console.log("Running scheduled pod cleanup job...");
     const allPods = await getAllPods();
     const listPodsWithNoConnection = allPods.map(async (pod) => {
         if (!pod.metadata || !pod.metadata.labels || typeof pod.metadata.labels.app !== "string") {
             throw Error("Pod doesn't have valid metadata or app label in order to delete");
         }
+        console.log("Name of pod ::", pod.metadata.labels.app);
         await CheckNumberOfConnections(pod.metadata.labels.app);
     });
     await Promise.all(listPodsWithNoConnection);
