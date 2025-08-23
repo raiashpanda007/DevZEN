@@ -126,6 +126,18 @@ app.post('/start', async (req, res): Promise<any> => {
     }
     const { projectId } = parsedBody.data;
     try {
+        // Check if any Deployment already exists for this projectId
+        const listResp = await appsV1Api.listNamespacedDeployment(namespace);
+        const deployments = listResp.body?.items || [];
+        const alreadyRunning = deployments.some(d => {
+            const name = d.metadata?.name || "";
+            return name.includes(projectId);
+        });
+        if (alreadyRunning) {
+            console.log(`Project ${projectId} already has a Deployment running`);
+            return res.status(200).send("Project already running");
+        }
+
         const kubeManifests = readAndParseYAMLFiles(path.join(__dirname, "../k8s/services.yml"), projectId);
         for (const manifest of kubeManifests) {
             try {
