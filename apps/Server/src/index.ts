@@ -127,8 +127,8 @@ app.post('/start', async (req, res): Promise<any> => {
     const { projectId } = parsedBody.data;
     try {
         // Check if any Deployment already exists for this projectId
-        const listResp = await appsV1Api.listNamespacedDeployment(namespace);
-        const deployments = listResp.body?.items || [];
+        const listResp = await appsV1Api.listNamespacedDeployment({ namespace });
+        const deployments = listResp.items || [];
         const alreadyRunning = deployments.some(d => {
             const name = d.metadata?.name || "";
             return name.includes(projectId);
