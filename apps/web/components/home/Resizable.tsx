@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@workspace/ui/components/button";
 import {
   ResizableHandle,
@@ -22,7 +22,8 @@ function Resizable({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const dispatch = useDispatch();
   const [isMobile, setIsMobile] = useState(false);
-  const [projects, setProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState<ProjectItem[]>([]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
 
   // Detect screen size
   const getUserProjects = async () =>{
@@ -40,6 +41,7 @@ function Resizable({ children }: { children: React.ReactNode }) {
         }
       }
       if(res.data.statusCode === 200){
+        setAllProjects(res.data.data);
         setProjects(res.data.data);
       }
     } catch (error: any) {
@@ -74,6 +76,16 @@ function Resizable({ children }: { children: React.ReactNode }) {
   }
   , []);
 
+  const handleSearch = (term: string) => {
+    const t = term.trim().toLowerCase();
+    if (t === "") {
+      setProjects(allProjects);
+      return;
+    }
+    const filtered = allProjects.filter((p) => p.name.toLowerCase().includes(t));
+    setProjects(filtered);
+  }
+
   return (
     <div className="font-sans relative top-24 w-full h-[calc(100%-96px)] flex z-1">
       <Button
@@ -99,14 +111,20 @@ function Resizable({ children }: { children: React.ReactNode }) {
         >
           <div className="h-full relative top-10">
             <div className="h-1/6 border flex flex-col justify-center">
-              <SearchInput />
+              <SearchInput onSearch={handleSearch} />
               <CreateProject />
             </div>
             <div className="h-5/6 space-y-10">
               <ScrollArea className="h-[calc(100%-40px)] w-full ">
-                {projects.map((project:ProjectItem) => (
-                  <ProjectsItem key={project.id} name={project.name} template={project.template} id={project.id}/>
-                ))}
+                {projects.length === 0 ? (
+                  <div className="flex h-full w-full items-center justify-center text-gray-500">
+                    No projects found
+                  </div>
+                ) : (
+                  projects.map((project:ProjectItem) => (
+                    <ProjectsItem key={project.id} name={project.name} template={project.template} id={project.id}/>
+                  ))
+                )}
               </ScrollArea>
             </div>
           </div>
