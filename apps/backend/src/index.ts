@@ -20,8 +20,8 @@ const terminal = new TerminalManager();
 const randomUUID = uuidv4();
 
 
-app.get("/healthz", (_req, res) => {
-    res.json({ status: "ok" });
+app.get('/healthz', (req, res) => {
+  res.status(200).send('OK');
 });
 app.get("/metrics", (_req, res) => {
     console.log(wss.clients.size);

@@ -127,13 +127,13 @@ spec:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 5
+            initialDelaySeconds: 20   # Increase this value
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 10
+            initialDelaySeconds: 30   # Increase this value
             periodSeconds: 20
 ---
 apiVersion: v1
@@ -178,4 +178,11 @@ spec:
               service:
                 name: service_name
                 port:
+                  number: 8080
+          - path: /healthz
+            pathType: Prefix
+            backend:
+              service:
+                name: service_name
+                port: 
                   number: 8080

@@ -12,12 +12,15 @@ import CreateProject from "./Resizable Components/CreateProject/CreateProject";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { loadinghandler } from "@/store/Loader";
 import ProjectsItem from "./Resizable Components/ProjectItem/ProjectsItem";
 import type { ProjectItem } from "@workspace/types";
 
 function Resizable({ children }: { children: React.ReactNode }) {
   const [currentSize, setCurrentSize] = useState(20);
   const router = useRouter();
+  const dispatch = useDispatch();
   const [isMobile, setIsMobile] = useState(false);
   const [projects, setProjects] = useState([]);
 
@@ -27,14 +30,28 @@ function Resizable({ children }: { children: React.ReactNode }) {
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project`,{withCredentials:true});
       if(res.data.statusCode === 401){
-        router.push("/api/auth/signin");
+        try{
+          dispatch(loadinghandler({ isLoading: true, message: "Redirecting to sign in..." }));
+          router.push("/api/auth/signin");
+        } catch (error) {
+          dispatch(loadinghandler({ isLoading: false, message: "" }));
+          console.error("Error  :: ", error);
+          throw error
+        }
       }
       if(res.data.statusCode === 200){
         setProjects(res.data.data);
       }
     } catch (error: any) {
       if (error?.response?.status === 401) {
-        router.push("/api/auth/signup"); 
+        try{
+          dispatch(loadinghandler({ isLoading: true, message: "Redirecting to sign up..." }));
+          await router.push("/api/auth/signup");
+        } catch(error) {
+          dispatch(loadinghandler({ isLoading: false, message: "" }));
+          console.error("Error :: ", error);
+          throw error;
+        }
       } else {
         console.error("Fetch error:", error);
       }

@@ -51,7 +51,13 @@ export function DeleteProjectButton({ projectId }: DeleteProjectButtonProps) {
     } catch (error) {
       console.error("Error deleting project:", error);
       dispatch(loadinghandler({ isLoading: false, message: "" }));
-      router.push(`${process.env.NEXT_PUBLIC_AUTH_URL}/home`);
+      try {
+        dispatch(loadinghandler({ isLoading: true, message: "Redirecting..." }));
+        router.push(`${process.env.NEXT_PUBLIC_AUTH_URL}/home`);
+      } catch(error) {
+        dispatch(loadinghandler({ isLoading: false, message: "" }));
+        throw error
+      }
     }
   }
 

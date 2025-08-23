@@ -62,7 +62,7 @@ async function CheckNumberOfConnections(PodName: string) {
         console.log("Number of connection ", response);
 
     } catch (error) {
-        console.log("Error in check number of connections of domain");
+        console.log("Error in check number of connections of domain",error);
     }
 }
 
@@ -81,7 +81,7 @@ export async function CleanPods() {
 
 
 const podsCleanUpJob = () => {
-    cron.schedule('*/1 * * * *', CleanPods);
+    cron.schedule('*/10 * * * *', CleanPods);
 }
 
 

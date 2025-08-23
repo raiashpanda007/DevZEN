@@ -1,11 +1,12 @@
 "use client";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "@/store/store";
 import { useRouter } from "next/navigation";
 import type { ProjectItem } from "@workspace/types";
 import { DeleteProjectButton } from "./DeleteProjectButton";
 import { DownloadProjectButton } from "./DownloadButton";
+import { loadinghandler } from "@/store/Loader";
 import axios from "axios";
 
 function ProjectsItem({
@@ -18,16 +19,26 @@ function ProjectsItem({
   );
 
   const router = useRouter();
+  const dispatch = useDispatch();
   const onClick = async () => {
     try {
+      dispatch(
+        loadinghandler({
+          isLoading: true,
+          message: "Spining up you k8s pod and setting up your domain",
+        })
+      );
       const startContainer = await axios.post(
         `${process.env.NEXT_PUBLIC_BASE_URL_SERVER}/start`,
         { projectId: id }
       );
+
       console.log(startContainer.data);
+
       router.push(`/projects/${id}`);
     } catch (error) {
       console.error("Error in starting pod");
+      dispatch(loadinghandler({ isLoading: false, message: "" }));
       throw error;
     }
   };

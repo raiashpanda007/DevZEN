@@ -58,9 +58,10 @@ function CreateProjectDialog() {
         }
       );
       if (response.data.success) {
-        dispatch(loadinghandler({ isLoading: false, message: "" }));
+        dispatch(loadinghandler({ isLoading: true, message: "" }));
         router.push(`/projects/${response.data.data.id}`);
-      } 
+        
+      }
         dispatch(loadinghandler({ isLoading: false, message: "" }));
         setError(response.data.message);
       

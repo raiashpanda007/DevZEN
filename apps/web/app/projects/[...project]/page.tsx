@@ -4,6 +4,8 @@ import CodeEditor from "@/components/Code/CodeEditor";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams, useRouter,useSearchParams } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { loadinghandler } from "@/store/Loader";
 const verifyUser = async (projectId: string,shareStatusCode:string | null ,shareStatus:boolean|null) => {
   try {
     const body = shareStatus&&shareStatusCode ? {projectId,shareStatus,shareStatusCode}:{projectId}
@@ -27,6 +29,7 @@ export default function Page() {
   const shareStatus = (useSearchParams().get('share') === "true")
   const shareStatusCode = useSearchParams().get('shareid')
   const router = useRouter();
+  const dispatch = useDispatch();
   const [verified, setVerified] = useState(true);
   const verifyFunc = async (project: string) => {
     const result = await verifyUser(project,shareStatusCode,shareStatus,);
@@ -72,7 +75,18 @@ export default function Page() {
             <div className="space-y-3">
              
               <button
-                onClick={() => router.push("/home/")}
+                onClick={async () => {
+                  try {
+                    // show loader
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (dispatch as any)(loadinghandler({ isLoading: true, message: "Redirecting..." }));
+                    router.push("/home/");
+                  }
+                  catch(error){
+                    console.log("Error :: ", error)
+                    dispatch(loadinghandler({isLoading:false,message:""}))
+                  }
+                }}
                 className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-2.5 px-4 rounded-lg transition-colors duration-200"
               >
                 Go Back
