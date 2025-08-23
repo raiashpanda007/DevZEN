@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 async function layout({children}:{children:React.ReactNode}) {
   const user = await verifyUser();
   if(!user){
-    redirect('http://localhost:3000/api/auth/signin');
+    redirect(`${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/auth/signin`);
   }
   return (
     <>

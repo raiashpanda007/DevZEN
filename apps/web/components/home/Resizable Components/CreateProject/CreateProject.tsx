@@ -48,7 +48,7 @@ function CreateProjectDialog() {
         })
       );
       const response = await axios.post(
-        `http://localhost:3000/api/project/`,
+        `${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/project/`,
         {
           name: projectName,
           template: selectedTemplate,
