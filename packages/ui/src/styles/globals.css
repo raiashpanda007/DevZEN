@@ -65,52 +65,71 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* refined, slightly cool neutral background for a premium feel */
+    --background: 220 20% 98%;
+    --foreground: 222 12% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 12% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
+    --popover-foreground: 222 12% 12%;
+
+    /* primary palette (indigo) and accessible foreground */
+    --primary: 257 60% 48%;
+    --primary-foreground: 0 0% 100%;
+
+    /* subtle cool secondary / muted tones */
+    --secondary: 220 12% 96%;
+    --secondary-foreground: 222 10% 22%;
+    --muted: 220 12% 96%;
+    --muted-foreground: 220 10% 45%;
+
+    /* accent for small highlights */
+    --accent: 280 65% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 78% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* borders, inputs and focus ring tuned for a softer look */
+    --border: 220 12% 90%;
+    --input: 220 12% 94%;
+    --ring: 257 65% 48%;
+
+    /* charts kept as-is but can be overridden later */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+
+    /* slightly larger radius for a premium rounded look */
+    --radius: 0.75rem;
+
+    /* small shadow tokens for subtle elevation */
+    --shadow-1: 0 6px 18px rgba(15, 23, 42, 0.06);
+    --shadow-2: 0 10px 40px rgba(15, 23, 42, 0.08);
   }
+
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 230 14% 7%;
+    --foreground: 0 0% 96%;
+    --card: 230 14% 9%;
+    --card-foreground: 0 0% 96%;
+    --popover: 230 14% 9%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 260 60% 92%;
+    --primary-foreground: 250 30% 10%;
+    --secondary: 230 12% 12%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 230 12% 12%;
+    --muted-foreground: 230 10% 60%;
+    --accent: 265 70% 80%;
+    --accent-foreground: 0 0% 96%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --destructive-foreground: 0 0% 96%;
+    --border: 230 12% 12%;
+    --input: 230 12% 12%;
+    --ring: 257 70% 70%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -121,9 +140,39 @@
 
 @layer base {
   * {
+    /* smooth transitions everywhere for a refined feel */
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease,
+      transform 120ms ease;
     @apply border-border;
   }
+
+  /* body gradient + font + smoothing */
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground font-sans antialiased;
+    background-color: hsl(var(--background));
+    /* subtle two-stop gradient to add depth without changing layout */
+    background-image: linear-gradient(180deg, hsl(var(--background)), hsl(var(--background) / 0.99));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* button defaults: keep structure but make controls feel premium */
+  button,
+  input[type="button"],
+  input[type="submit"],
+  a[class*="btn"] {
+    @apply rounded-md;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+    border: 1px solid hsl(var(--border));
+  }
+
+  /* subtle elevated card style available for components using .card */
+  .card {
+    background: hsl(var(--card));
+    color: hsl(var(--card-foreground));
+    border-radius: var(--radius);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-1);
   }
 }

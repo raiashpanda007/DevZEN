@@ -19,6 +19,7 @@ function SendingHomeButton() {
             try {
               dispatch(loadinghandler({ isLoading: true, message: "Redirecting..." }));
               router.push(status === "authenticated" ? "/home" : "/api/auth/signin");
+              dispatch(loadinghandler({ isLoading: false, message: "" }));
             } catch(error) {
               dispatch(loadinghandler({ isLoading: false, message: "" }));
               throw error;
