@@ -22,6 +22,7 @@ const NavBar = () => {
                 loadinghandler({ isLoading: true, message: "Loading..." })
               );
               router.push("/home");
+              dispatch(loadinghandler({ isLoading: false, message: "" }));
             } catch (error) {
               console.error("Error :: ", error);
               dispatch(loadinghandler({ isLoading: false, message: "" }));
