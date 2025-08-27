@@ -1,193 +1,184 @@
 # 🚀 DevZEN
 
-> **Cloud-native collaborative IDE with AI assistance, real-time coding, and VS Code experience in the browser.**
+DevZEN is a cloud-native, browser-first IDE that brings a full development workspace (Monaco editor, file explorer, terminal) to the browser. It is built as a Turborepo monorepo and combines a Next.js frontend, a WebSocket-based backend for live workspace operations and PTY streaming, and an Express server for provisioning and S3 interactions.
 
-![Monaco Editor](https://img.shields.io/badge/Editor-Monaco-blue)
-![Turborepo](https://img.shields.io/badge/Monorepo-Turborepo-green)
-![Status](https://img.shields.io/badge/Status-Actively%20Building-yellow)
+This README summarizes the architecture, runtime flow, infrastructure (Docker + Kubernetes), and how to get the project running locally. It also highlights a planned AI agent named "Ashna" that will be integrated into the IDE.
 
 ---
 
-## 🧠 What is DevZEN?
+## ✨ Highlights
 
-**DevZEN** is a browser-based IDE designed for real-world development workflows.  
-It brings real-time collaboration, a smart AI assistant, and full-stack coding power into a single cloud-native developer workspace.
-
-Built on top of **Monaco Editor**, **Next.js**, and **Turborepo**, with powerful backend architecture and terminal support.
-
----
-
-## 📦 Monorepo Structure (Turborepo)
-
-```
-devzen/
-├── apps/
-│   ├── web/         # Next.js frontend (Monaco + ShadCN UI)
-│   ├── backend/     # Socket connections (collaboration backend)
-│   └── server/      # Express backend (S3 + AI assistant handling)
-├── packages/
-│   └── db/          # Prisma schema, migrations, and client
-├── .env             # Environment config
-└── docker-compose.yml
-```
+- Frontend: [apps/web](apps/web) — Next.js + Monaco Editor + ShadCN UI  
+- Backend: [apps/backend/src/index.ts](apps/backend/src/index.ts) — WebSocket server handling file ops and PTY terminals  
+- Server (provisioning / S3): [apps/Server/src/index.ts](apps/Server/src/index.ts) — Express endpoints to create/start projects and copy templates from S3  
+- Types & shared schemas: [`CreateProjectSchema`](packages/types/src/Schema/CreateProjectSchema.ts) and [`Messages`](packages/types/src/Messages.ts)  
+ - Jobs: [apps/Jobs](apps/Jobs) — background utilities for Kubernetes jobs and scheduled tasks
+- DB: [packages/db/prisma/schema.prisma](packages/db/prisma/schema.prisma) — Prisma schema for users & projects  
+- S3 & workspace utilities (backend): [apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts) and [apps/backend/src/filesSystem.ts](apps/backend/src/filesSystem.ts)  
+- K8s manifests: [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml)  
+- Containerization: [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml)
 
 ---
 
-## 🛠️ Getting Started (Dev Setup)
+## 🏗️ High-level flow
 
-### ✅ 1. Install dependencies from root
+1. User interacts with the Next.js frontend ([apps/web](apps/web)):
+   - Browses projects, creates new projects, opens the editor and terminal.
+2. Project creation (frontend → server):
+   - Frontend posts to the Server API ([apps/Server/src/index.ts](apps/Server/src/index.ts)). Server copies starter code from S3 (via `copyFolder`) to code storage then prepares Kubernetes manifests.
+   - Schema validation uses [`CreateProjectSchema`](packages/types/src/Schema/CreateProjectSchema.ts).
+3. Provisioning & starting:
+   - The Server replaces placeholders in [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml) and creates the required Kubernetes resources (Deployment / Service / Ingress).
+4. Workspace runtime:
+   - The Kubernetes pod for the project runs the backend image which mounts a workspace volume and exposes a WebSocket endpoint.
+   - Frontend connects to the backend WebSocket ([apps/backend/src/index.ts](apps/backend/src/index.ts)) for:
+     - File tree fetch / file content fetch / CRUD operations (messages defined in [`Messages`](packages/types/src/Messages.ts))
+     - Terminal (PTY) streaming
+     - Periodic upload of compressed workspace to S3 (see [apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts) and [apps/backend/src/filesSystem.ts](apps/backend/src/filesSystem.ts))
+5. Persistence & backups:
+   - Backend compresses project folders into zip files and uploads them to S3; Server can rehydrate projects from S3 when provisioning.
+
+---
+
+## 🤖 Ashna — AI agent (coming soon)
+
+Work is in progress to integrate an AI assistant named **Ashna** into the editor.
+
+- Ashna will review code and will not provide any kind of suggestion to the user.
+- Ashna may be able to build complete features end-to-end using MCP and related automation flows (scaffolding, wiring services, tests and deployment manifests).
+- Integration points are planned in the frontend and server: an assistant endpoint can be added in [apps/Server/src/index.ts](apps/Server/src/index.ts) and surfaced in the editor UI in [apps/web](apps/web).
+
+Note: the current monorepo layout and server endpoints are prepared so Ashna can be added later as an automation-focused agent rather than an interactive suggester.
+
+
+---
+
+## 🐳 Docker & ☸️ Kubernetes
+
+- Docker:
+  - The project provides a multi-stage [Dockerfile](Dockerfile) to build backend artifacts and produce a production image.
+  - Use [docker-compose.yml](docker-compose.yml) for local services (Postgres, Redis).
+- Kubernetes:
+  - Production-grade manifests live in [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml).
+  - The Server replaces `service_name` with each project ID and creates Deployments, Services, and Ingress with WebSocket and long-timeout annotations.
+  - Ingress config enables WebSocket proxying (e.g., `nginx.ingress.kubernetes.io/enable-websocket: "true"`).
+
+---
+
+## ⚙️ Local development — quick start
+
+1. Install dependencies (root):
 ```bash
 pnpm install
 ```
 
-### ✅ 2. Start supporting services (PostgreSQL, etc.)
+2. Start local infrastructure:
 ```bash
-docker compose up
+docker compose up -d
+# Wait for Postgres and Redis to be ready
 ```
 
-### ✅ 3. Set up database
+3. Setup database (Prisma):
 ```bash
-cd packages/db/
+cd packages/db
 npx prisma migrate dev
 npx prisma generate
+cd ../../
 ```
 
-### ✅ 4. Build the backend services
+4. Build backend services:
 ```bash
-cd ../../apps/backend
+cd apps/backend
 pnpm tsbuild
-
 cd ../server
 pnpm tsbuild
+cd ../../
 ```
 
-### ✅ 5. Start all apps (frontend + backend + services)
+5. Run everything in development:
 ```bash
-cd ../../
 pnpm dev
 ```
 
-This will start:
+- Frontend runs at http://localhost:3000 ([apps/web package.json scripts](apps/web/package.json)).
+- Backend listens on port 8080 ([apps/backend/src/index.ts](apps/backend/src/index.ts)).
+- Server listens on port 3001/8000 depending on env ([apps/Server/src/index.ts](apps/Server/src/index.ts)).
 
-- 🖥️ Web at [http://localhost:3000](http://localhost:3000)
-- ⚙️ Backend at port `8080`
-- 🧠 Server (AI + S3 handler) at port `8000`
-
----
-
-## 🏗️ Project Architecture & Flow
-
-### High-Level Architecture
-
-- **Frontend (`apps/web/`)**  
-  Next.js app with Monaco Editor, file explorer, and terminal UI. Communicates with backend via REST and WebSockets.
-
-- **Backend (`apps/backend/`)**  
-  Node.js server using WebSockets for real-time file system operations, project workspace management, and PTY terminal streaming.
-
-- **Server (`apps/server/`)**  
-  Express.js server for project provisioning, S3 file management, and (future) AI assistant endpoints.
-
-- **Database (`packages/db/`)**  
-  PostgreSQL managed via Prisma ORM. Stores users, projects, templates, and share codes.
-
-- **Monorepo (Turborepo)**  
-  Orchestrates builds, linting, and dependency management across all apps and packages.
+See the root [package.json](package.json) for turbo scripts and monorepo tooling.
 
 ---
 
-### Project Flow
+## 🔐 Environment & secrets
 
-1. **Authentication**  
-   Users must sign in to access their dashboard and projects.
-
-2. **Project Creation**  
-   - User creates a project from a template.
-   - Backend provisions workspace, copies starter code from S3, and sets up the project directory.
-
-3. **Workspace Initialization**  
-   - Frontend connects to backend via WebSocket.
-   - File tree is loaded and sent to the client.
-   - Monaco Editor is initialized.
-
-4. **File System Operations**  
-   - Users create, rename, and delete files/folders.
-   - Actions are sent over WebSocket to backend, which updates the workspace and persists changes.
-   - **File data is sent after compressing and then decompressed on the receiving end** to optimize transfer and storage.
-
-5. **Code Editing**  
-   - Files are edited in Monaco Editor.
-   - Changes are sent to backend and saved.
-   - **Live multi-user editing is not implemented**; only one user edits at a time.
-
-6. **Terminal Access**  
-   - Each project has a dedicated PTY terminal, streamed over WebSocket.
-
-7. **Project Sharing**  
-   - Users can generate a share link for their project.
-   - Anyone with the link can access the project in restricted mode.
+- Local `.env` files are used for secrets and credentials. For S3 and Kubernetes, the Server and backend expect AWS credentials (see [apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts)).
+- When deploying to Kubernetes, make sure to create secrets (example: `aws-secret-prod`) referenced in [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml).
 
 ---
 
-### ❌ Skipped / Not Yet Implemented
+## 📁 Important files & symbols
 
-- **Live Collaboration:**  
-  Real-time, multi-user editing (like VS Code Live Share) is **not yet implemented**. Only one user edits at a time; changes are not broadcast live to other sessions.
+- Project entry points
+  - [apps/web](apps/web)
+  - [apps/backend/src/index.ts](apps/backend/src/index.ts)
+  - [apps/Server/src/index.ts](apps/Server/src/index.ts)
+- Shared types & schemas
+  - [`CreateProjectSchema`](packages/types/src/Schema/CreateProjectSchema.ts)
+  - [`Messages`](packages/types/src/Messages.ts)
+  - [`Type` enum](packages/types/src/index.ts)
+- Workspace persistence utilities
+  - [apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts)
+  - [apps/backend/src/filesSystem.ts](apps/backend/src/filesSystem.ts)
+- Infrastructure
+  - [Dockerfile](Dockerfile)
+  - [docker-compose.yml](docker-compose.yml)
+  - [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml)
 
-- **AI Assistant:**  
-  Context-aware AI code suggestions are planned but not yet available.
+## 🛠️ Jobs (background workers & k8s utilities)
 
-- **Advanced Access Controls:**  
-  More granular permissions and workspace roles are planned for future releases.
+The `apps/Jobs` package contains background utilities and scheduled tasks that interact with Kubernetes and the cluster environment. It's intended for housekeeping, monitoring, and automation jobs the platform runs on a schedule or on-demand.
 
----
+Key files and purpose:
 
-## 🧩 Features
+- `.env` — environment variables used by the jobs (cron schedules, cluster connection settings, feature flags).
+- `k8sConfig.ts` — helpers to build or transform Kubernetes manifests and config used by jobs or provisioning flows.
+- `src/index.ts` — job entrypoint which registers scheduled tasks or exposes a CLI to run specific jobs.
+- `src/controllers/cleaner.ts` — cleanup tasks (for example removing stale pods, orphaned volumes, or temporary workspaces).
+- `src/controllers/getAllpods.ts` — utilities to query the cluster for pod status and emit metrics or alerts.
+- `src/utils/` — shared helpers used by the job controllers.
 
-- 🔁 Real-time collaboration using WebSockets
-- 👨‍💻 Monaco Editor with file explorer, terminal, and themes
-- 🧠 Context-aware AI assistant (WIP)
-- 📁 File system interaction with backend sync
-- 🐚 Bash shell access via PTY (node-pty)
-- ☁️ Docker + K8s-ready architecture
+Typical uses:
 
----
+- Run periodic cleanup of stale resources created by temporary workspaces.
+- Collect and report cluster state (pods, resource usage) for observability.
+- Generate or validate Kubernetes manifests used by the Server when provisioning project workspaces.
 
-## 🌍 Tech Stack
+Quick local run (assumptions: `pnpm` is used across the monorepo and `apps/Jobs/package.json` exposes common scripts):
 
-| Layer      | Stack                                       |
-|------------|---------------------------------------------|
-| Frontend   | Next.js, TailwindCSS, ShadCN UI, Monaco     |
-| Backend    | Express.js, Node.js, WebSockets, PTY        |
-| Database   | PostgreSQL via Prisma ORM                   |
-| DevOps     | Docker Compose, Kubernetes (WIP), PNPM      |
-| Infra      | Turborepo (monorepo orchestration)          |
+```bash
+cd apps/Jobs
+pnpm install
+# run in dev (if script exists)
+pnpm dev || pnpm start || node dist/index.js
+```
 
----
+If the package uses TypeScript build step, run `pnpm build` then `node dist/index.js`. If you want the Jobs package to run against a real Kubernetes cluster, configure kubeconfig or point the environment at a test cluster.
 
-## 🤝 Contributing
-
-This is currently a private solo-built project.  
-External contributions are **invite-only**.
-
-If you're contributing as a freelancer or invited dev:
-
-- Work in feature branches
-- Open a PR for review (no direct push to `main`)
-- Stick to existing code style and structure
-
----
-
-## 🚧 Work in Progress
-
-- [ ] AI assistant logic with in-editor suggestions
-- [ ] Terminal state persistence
-- [ ] Live file sync across sessions
-- [ ] Workspace sharing & access controls
-- [ ] Full CI/CD + K8s deployment
+Note: I used the actual `apps/Jobs` structure in the repo to summarize responsibilities and made a small, conservative assumption about script names (`dev`, `start`, `build`) common in this monorepo; adjust the commands to the exact scripts in `apps/Jobs/package.json` if they differ.
 
 ---
 
-## 🙌 Made by Ashwin Rai
+## 🧭 Troubleshooting tips
 
-Built from scratch with the intent to replace clunky coding sandboxes with something real devs can trust.
+- WebSocket connection issues: confirm the backend is reachable and Ingress or proxy supports WebSocket upgrade. Check `nginx` ingress annotations in [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml).
+- S3 uploads/downloads: verify AWS env vars and secrets used by backend ([apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts)).
+- Prisma / DB errors: ensure Postgres in docker-compose is up and [packages/db/prisma/schema.prisma](packages/db/prisma/schema.prisma) migrations have run.
+
+---
+
+## ❤️ Contributing
+
+- Work in feature branches, open a PR to `main`.
+- Keep changes scoped to one package/app when possible.
+- Run linting and tests via turbo scripts in the root [package.json](package.json).
+
+---
