@@ -14,13 +14,13 @@ const HomeCards = () => {
           className="rounded-lg shadow-2xl   h-full"
         />
         <div className="sm:w-1/2 w-full ">
-          <h1 className="text-3xl  font-bold">ZenCode Editor</h1>
+          <h1 className="text-3xl  font-bold">DevZEN Editor</h1>
           <p className="">
-            <strong className="text-red-600 font-bold">ZenCode Editor</strong>{" "}
+            <strong className="text-red-600 font-bold">DevZEN Editor</strong>{" "}
             is a powerful yet minimalistic online code editor designed to
             provide a smooth, focused, and distraction-free coding experience.
             Whether you're writing code, collaborating with a team, or
-            experimenting with new ideas, ZenCode Editor ensures a seamless and
+            experimenting with new ideas, DevZEN Editor ensures a seamless and
             efficient workflow.
           </p>
         </div>
