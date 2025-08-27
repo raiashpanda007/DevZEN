@@ -52,59 +52,81 @@ function CodeEditor() {
 
     console.log("socket url ; " , wsServerURL)
     
-  const {socket} = useSocket(wsServerURL || "")
+  const {socket, socketState} = useSocket(wsServerURL || "")
  useEffect(() => {
-  if (!socket) return;
+  // Update loading state based on socket connection state
+  if (socketState.isConnected) {
+    dispatch(loadinghandler(false));
+  } else if (socketState.isConnecting || socketState.retryCount > 0) {
+    dispatch(loadinghandler(true));
+  } else if (socketState.error && socketState.retryCount === 0) {
+    // Only show as not loading if there's an error and no retries planned
+    dispatch(loadinghandler(false));
+  }
 
-  const checkSocket = () => {
-    if (socket.readyState === WebSocket.OPEN) {
-      dispatch(loadinghandler(false));
-    } else {
-      dispatch(loadinghandler(true));
-    }
-  };
-
-  checkSocket();
-
-  socket.addEventListener("open", checkSocket);
-  socket.addEventListener("close", checkSocket);
-
-  return () => {
-    socket.removeEventListener("open", checkSocket);
-    socket.removeEventListener("close", checkSocket);
-  };
-}, [socket]);
+  // Log connection state for debugging
+  if (socketState.error) {
+    console.log('Socket connection error:', socketState.error);
+  }
+}, [socketState, dispatch]);
 
   return (
-    <div className="w-full h-[calc(100vh-96px)] flex overflow-hidden">
-      {dialogOpen && (
-        <DialogBox
-          loaderState={dialogOpen}
-          type={typeDialog}
-          setLoaderState={setDialogOpen}
-          path={path}
+    <div className="w-full h-[calc(100vh-96px)] flex flex-col overflow-hidden">
+      {/* Connection Status Indicator */}
+      {(socketState.isConnecting || socketState.error) && (
+        <div className={`px-4 py-2 text-sm ${
+          socketState.error && socketState.retryCount === 0 
+            ? 'bg-red-100 text-red-700 border-b border-red-200' 
+            : 'bg-blue-100 text-blue-700 border-b border-blue-200'
+        }`}>
+          {socketState.isConnecting && socketState.retryCount === 0 && (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>Connecting to development server...</span>
+            </div>
+          )}
+          {socketState.error && socketState.retryCount > 0 && (
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span>{socketState.error}</span>
+            </div>
+          )}
+          {socketState.error && socketState.retryCount === 0 && (
+            <span>{socketState.error}</span>
+          )}
+        </div>
+      )}
+      
+      <div className="flex flex-1 overflow-hidden">
+        {dialogOpen && (
+          <DialogBox
+            loaderState={dialogOpen}
+            type={typeDialog}
+            setLoaderState={setDialogOpen}
+            path={path}
+            socket={socket}
+          />
+        )}
+        <Sidebar
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
+          dialogOpen={dialogOpen}
+          setDialogOpen={setDialogOpen}
+          setTypeDialog={setTypeDialog}
+          setPath={setPath}
           socket={socket}
         />
-      )}
-      <Sidebar
-        selectedFile={selectedFile}
-        setSelectedFile={setSelectedFile}
-        dialogOpen={dialogOpen}
-        setDialogOpen={setDialogOpen}
-        setTypeDialog={setTypeDialog}
-        setPath={setPath}
-        socket={socket}
-      />
 
-      <div className="flex-1 h-full overflow-hidden">
-        <Suspense fallback={<div>Loading editor...</div>}>
-          <MonacoEditor
-            selectedFile={selectedFile}
-            setSelectedFile={setSelectedFile}
-            socket={socket}
-            projectId={Array.isArray(project) ? project[0] ?? "" : project ?? ""}
-          />
-        </Suspense>
+        <div className="flex-1 h-full overflow-hidden">
+          <Suspense fallback={<div>Loading editor...</div>}>
+            <MonacoEditor
+              selectedFile={selectedFile}
+              setSelectedFile={setSelectedFile}
+              socket={socket}
+              projectId={Array.isArray(project) ? project[0] ?? "" : project ?? ""}
+            />
+          </Suspense>
+        </div>
       </div>
     </div>
   );
