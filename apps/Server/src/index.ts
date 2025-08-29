@@ -10,7 +10,7 @@ import { KubeConfig, CoreV1Api, AppsV1Api, NetworkingV1Api, CustomObjectsApi } f
 dotnev.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5001;
 const CreateProjectSchemaBackend = zod.object({
     projectId: zod.string().nonempty(),
     language: zod.string().nonempty(),

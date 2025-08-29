@@ -7,15 +7,17 @@ import { JWT } from "next-auth/jwt";
 const NEXT_AUTH_CONFIG: NextAuthOptions = {
   providers: [
     GoogleProvider({
+      // clientId may be public, but clientSecret must come from a server-only env var
       clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET|| "",
     }),
     GitHubProvider({
       clientId: process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "",
-      clientSecret: process.env.NEXT_PUBLIC_GITHUB_CLIENT_SECRET || "",
+      clientSecret: process.env.GITHUB_CLIENT_SECRET || "",
     }),
   ],
-  secret: process.env.NEXT_PUBLIC_AUTH_SECRET,
+  // Prefer the server-only NEXTAUTH_SECRET. Fall back to the existing public env if present.
+  secret: process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_AUTH_SECRET,
   callbacks: {
     async jwt({ token, account, user }: { token: JWT; account: any; user: any }) {
       if (user) {

@@ -5,7 +5,7 @@ import { getAllPods } from './controllers/getAllpods';
 import podsCleanUpJob from "./controllers/cleaner"
 dotnev.config()
 const app = express();
-const PORT = process.env.PORT || 3002
+const PORT = process.env.PORT || 5002
 app.use(express.json());
 app.use(cors({
     origin: "*"
