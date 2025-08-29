@@ -168,7 +168,7 @@ spec:
   tls:                                                
     - hosts:
         - service_name.devzen.ashprojects.tech
-      secretName: service_name-tls 
+      secretName: devzen-wildcard-tls 
   rules:
     - host: service_name.devzen.ashprojects.tech
       http:

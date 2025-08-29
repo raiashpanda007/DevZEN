@@ -1,14 +1,12 @@
 apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
+kind: Certificate
 metadata:
-  name: letsencrypt-prod
+  name: devzen-wildcard-cert
 spec:
-  acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
-    email: raiashwin005@gmail.com
-    privateKeySecretRef:
-      name: letsencrypt-prod
-    solvers:
-    - http01:
-        ingress:
-          class: nginx
+  secretName: devzen-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: "*.devzen.ashprojects.tech"
+  dnsNames:
+    - "*.devzen.ashprojects.tech"
