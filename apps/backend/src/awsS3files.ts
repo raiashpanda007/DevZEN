@@ -24,6 +24,10 @@ const homeDir = "/workspace";
 const workspaceDir = path.join(homeDir, "/");
 
 export async function uploadAllProjectsFromWorkspace() {
+  if (!AWS_S3_BUCKET_NAME) {
+    console.warn("⚠️ AWS_S3_BUCKET_NAME is not set; skipping uploadAllProjectsFromWorkspace.");
+    return;
+  }
   if (!fs.existsSync(workspaceDir)) {
     fs.mkdirSync(workspaceDir, { recursive: true });
   }
@@ -57,6 +61,10 @@ export async function uploadAllProjectsFromWorkspace() {
 }
 
 export const getRootFilesandFolders = async (key: string, localPath: string, projectId: string) => {
+  if (!AWS_S3_BUCKET_NAME) {
+    console.warn("⚠️ AWS_S3_BUCKET_NAME is not set; skipping getRootFilesandFolders.");
+    return;
+  }
   const projectDir = path.join(localPath, projectId);
   if (!fs.existsSync(projectDir)) {
     fs.mkdirSync(projectDir, { recursive: true });

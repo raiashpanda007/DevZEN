@@ -113,6 +113,9 @@ spec:
           env:
             - name: PORT
               value: "8080"
+          envFrom:
+            - secretRef:
+                name: aws-secret-prod
           volumeMounts:
             - name: workspace-volume
               mountPath: /workspace
@@ -191,3 +194,21 @@ spec:
                 name: service_name
                 port: 
                   number: 8080
+
+---
+
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: service_name-cert
+spec:
+  secretName: service_name-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: service_name.devzen.ashprojects.tech
+  dnsNames:
+    - service_name.devzen.ashprojects.tech
+  privateKey:
+    algorithm: RSA
+    size: 2048

@@ -6,7 +6,7 @@ import yaml from "yaml";
 import cors from "cors";
 import dotnev from "dotenv"
 import path from "path"
-import { KubeConfig, CoreV1Api, AppsV1Api, NetworkingV1Api } from "@kubernetes/client-node"
+import { KubeConfig, CoreV1Api, AppsV1Api, NetworkingV1Api, CustomObjectsApi } from "@kubernetes/client-node"
 dotnev.config();
 
 const app = express();
@@ -33,6 +33,7 @@ if (process.env.KUBERNETES_SERVICE_HOST && process.env.KUBERNETES_SERVICE_PORT) 
 const coreV1Api = kubeconfig.makeApiClient(CoreV1Api);
 const appsV1Api = kubeconfig.makeApiClient(AppsV1Api);
 const networkingV1Api = kubeconfig.makeApiClient(NetworkingV1Api);
+const customObjectsApi = kubeconfig.makeApiClient(CustomObjectsApi);
 
 
 const readAndParseYAMLFiles = (filePath: string, projectId: string) => {
@@ -84,7 +85,18 @@ app.post('/project', async (req, res) => {
 
 
         // 3. Create Kubernetes resources
-        for (const manifest of kubeManifests) {
+        // Split Certificates so we create Ingress (and related resources) first,
+        // then create Certificate CRs. This ensures cert-manager can perform HTTP-01
+        // challenge against an existing Ingress.
+        const certManifests: any[] = [];
+        const otherManifests: any[] = [];
+        for (const m of kubeManifests) {
+            if (m.kind === 'Certificate') certManifests.push(m);
+            else otherManifests.push(m);
+        }
+
+        // Create non-Certificate resources first
+        for (const manifest of otherManifests) {
             try {
                 console.log(`Creating ${manifest.kind} → ${manifest.metadata?.name}`);
                 switch (manifest.kind) {
@@ -105,6 +117,27 @@ app.post('/project', async (req, res) => {
                     console.warn(`${manifest.kind} already exists for ${projectId}`);
                 } else {
                     throw err;
+                }
+            }
+        }
+
+        // Now create Certificate CRs (if any). These require Ingress to exist.
+        for (const manifest of certManifests) {
+            try {
+                console.log(`Creating Certificate → ${manifest.metadata?.name}`);
+                await (customObjectsApi as any).createNamespacedCustomObject(
+                    "cert-manager.io",
+                    "v1",
+                    namespace,
+                    "certificates",
+                    manifest
+                );
+            } catch (err: any) {
+                if (err?.response?.statusCode === 409) {
+                    console.warn(`Certificate already exists for ${projectId}`);
+                } else {
+                    // Log and continue — failure creating a certificate shouldn't stop resource creation
+                    console.error(`Error creating Certificate for ${projectId}:`, err);
                 }
             }
         }
@@ -139,7 +172,16 @@ app.post('/start', async (req, res): Promise<any> => {
         }
 
         const kubeManifests = readAndParseYAMLFiles(path.join(__dirname, "../k8s/services.yml"), projectId);
-        for (const manifest of kubeManifests) {
+        // Apply non-Certificate resources first, then Certificate CRs so cert-manager
+        // can perform HTTP-01 challenges against an existing Ingress.
+        const certManifestsStart: any[] = [];
+        const otherManifestsStart: any[] = [];
+        for (const m of kubeManifests) {
+            if (m.kind === 'Certificate') certManifestsStart.push(m);
+            else otherManifestsStart.push(m);
+        }
+
+        for (const manifest of otherManifestsStart) {
             try {
                 console.log(`Creating ${manifest.kind} → ${manifest.metadata?.name}`);
                 switch (manifest.kind) {
@@ -158,11 +200,28 @@ app.post('/start', async (req, res): Promise<any> => {
             } catch (err: any) {
                 if (err?.response?.statusCode === 409) {
                     console.warn(`${manifest.kind} already exists for ${projectId}`);
-                    // Do NOT send a response here!
                 } else {
-                    // Log and rethrow, but do NOT send a response here!
                     console.error(`Error creating ${manifest.kind}:`, err);
                     throw err;
+                }
+            }
+        }
+
+        for (const manifest of certManifestsStart) {
+            try {
+                console.log(`Creating Certificate → ${manifest.metadata?.name}`);
+                await (customObjectsApi as any).createNamespacedCustomObject(
+                    "cert-manager.io",
+                    "v1",
+                    namespace,
+                    "certificates",
+                    manifest
+                );
+            } catch (err: any) {
+                if (err?.response?.statusCode === 409) {
+                    console.warn(`Certificate already exists for ${projectId}`);
+                } else {
+                    console.error(`Error creating Certificate for ${projectId}:`, err);
                 }
             }
         }
