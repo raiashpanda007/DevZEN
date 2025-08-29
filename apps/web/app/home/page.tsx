@@ -23,7 +23,7 @@ function Page() {
             Ashna will help scaffold features, suggest fixes, generate tests,
             and automate deployments  think of it as a friendly co-pilot for
             coding and ops.
-          </p>
+        </p>
         </div>
       </div>
 

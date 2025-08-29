@@ -159,8 +159,13 @@ metadata:
     nginx.ingress.kubernetes.io/enable-websocket: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   ingressClassName: nginx
+  tls:                                                
+    - hosts:
+        - service_name.devzen.ashprojects.tech
+      secretName: service_name-tls 
   rules:
     - host: service_name.devzen.ashprojects.tech
       http:
