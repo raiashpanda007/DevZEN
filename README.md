@@ -17,6 +17,37 @@ This README summarizes the architecture, runtime flow, infrastructure (Docker + 
 - S3 & workspace utilities (backend): [apps/backend/src/awsS3files.ts](apps/backend/src/awsS3files.ts) and [apps/backend/src/filesSystem.ts](apps/backend/src/filesSystem.ts)  
 - K8s manifests: [apps/Server/k8s/services.yml](apps/Server/k8s/services.yml)  
 - Containerization: [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml)
+ 
+## 🧩 Services we provide
+
+This project exposes a set of runtime and infrastructure services used to create, run and manage cloud-native workspaces for developers:
+
+- Interactive browser IDE — Monaco-based editor with file explorer and in-browser terminal (frontend: `apps/web`).
+- Live workspace host — per-project runtime pods that expose a WebSocket backend for file operations and PTY streaming (backend: `apps/backend/src/index.ts`).
+- Project provisioning — server-side API to create projects, copy templates from S3 and generate Kubernetes manifests (`apps/Server/src/index.ts` and `apps/Server/k8s/services.yml`).
+- Template & asset store — prebuilt templates (see `apps/web` templates and `packages/ui` helpers) and S3-backed template storage (`apps/backend/src/awsS3files.ts`).
+- Workspace persistence & backups — periodic compression and upload of workspace snapshots to S3 and rehydration during provisioning (`apps/backend/src/filesSystem.ts`, `apps/backend/src/awsS3files.ts`).
+- Container build & packaging — Dockerfile and multi-stage images for the backend and server; compose for local infra (`Dockerfile`, `docker-compose.yml`).
+- Background jobs & cluster utilities — scheduled jobs and Kubernetes helpers for cleanup, monitoring and manifest generation (`apps/Jobs`).
+- Observability & health endpoints — readiness/liveness checks and optional metrics endpoints exposed by services (see `apps/backend` and `apps/Server` health routes).
+
+### Project templates we provide
+
+The frontend ships a curated list of project templates users can pick when creating a new workspace. These templates are defined in `apps/web/store/Templates.ts` and are used by the Create Project UI and the Server provisioning flow.
+
+- Node JS (id: `node_js`) — minimal Node project
+- React JS (id: `react_js`) — React app starter
+- React with TypeScript (id: `react_typescript`) — React + TypeScript starter
+- Node JS with TypeScript (id: `node_js_typescript`) — Node + TypeScript starter
+- C++ (id: `cpp`) — C++ project template
+- Python (id: `python`) — Python starter
+- Python with Django (id: `python_django`) — Django starter
+- NextJS with TypeScript (id: `next_js`) — Next.js + TypeScript starter
+- Next with TurboRepo (id: `next_js_turbo`) — Next.js monorepo starter
+
+The Server copies the selected template from S3 (or local template storage) into the project's workspace during provisioning — see `apps/Server/src/index.ts` and `apps/backend/src/awsS3files.ts` for the copy/rehydration logic.
+
+These services together enable reproducible, ephemeral workspaces that can be provisioned, inspected, and backed up from the browser.
 
 ---
 
