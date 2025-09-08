@@ -130,13 +130,13 @@ spec:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 20   # Increase this value
+            initialDelaySeconds: 20
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8080
-            initialDelaySeconds: 30   # Increase this value
+            initialDelaySeconds: 30
             periodSeconds: 20
 ---
 apiVersion: v1
@@ -162,13 +162,17 @@ metadata:
     nginx.ingress.kubernetes.io/enable-websocket: "true"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/hsts: "true"
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
+    nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
+    nginx.ingress.kubernetes.io/hsts-preload: "true"
 spec:
   ingressClassName: nginx
-  tls:                                                
+  tls:
     - hosts:
-        - service_name.devzen.ashprojects.tech
-      secretName: devzen-wildcard-tls 
+        - '*.devzen.ashprojects.tech'
+      secretName: devzen-wildcard-cert
   rules:
     - host: service_name.devzen.ashprojects.tech
       http:
@@ -194,4 +198,3 @@ spec:
                 name: service_name
                 port: 
                   number: 8080
-

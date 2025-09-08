@@ -1,12 +1,17 @@
 apiVersion: cert-manager.io/v1
-kind: Certificate
+kind: ClusterIssuer
 metadata:
-  name: devzen-wildcard-cert
+  name: letsencrypt-prod
 spec:
-  secretName: devzen-wildcard-tls
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
-  commonName: "*.devzen.ashprojects.tech"
-  dnsNames:
-    - "*.devzen.ashprojects.tech"
+  acme:
+    email: raiashwin005@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-prod-key
+    solvers:
+      - dns01:
+          cloudflare:
+            email: raiashwin005@gmail.com
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
