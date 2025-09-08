@@ -3,7 +3,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { useDebounce } from "react-use";
-import Run from "@workspace/ui/components/Code/Run";
+import Run from "@workspace/ui/components/Code/ChatWithAshna-Assistant";
 import Console from "@workspace/ui/components/Code/Console";
 import type { File as FileTypes } from "@workspace/types";
 import { Type } from "@workspace/types";
