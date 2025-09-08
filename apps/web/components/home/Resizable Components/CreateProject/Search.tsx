@@ -41,7 +41,7 @@ function Search({ selectedTemplate, setSelectedTemplate }: SearchProps) {
     <div className=" relative">
       <Label className="mt-2">Select template</Label>
       <Input
-        placeholder="Template"
+        placeholder="Add template name (node, react, next, turborepo ... )"
         className="w-full"
         onChange={(e) => {
           setSearchTerm(e.target.value);

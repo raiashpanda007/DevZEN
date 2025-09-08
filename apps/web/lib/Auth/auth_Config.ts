@@ -17,7 +17,7 @@ const NEXT_AUTH_CONFIG: NextAuthOptions = {
     }),
   ],
   // Prefer the server-only NEXTAUTH_SECRET. Fall back to the existing public env if present.
-  secret: process.env.NEXTAUTH_SECRET || process.env.NEXT_PUBLIC_AUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET ,
   callbacks: {
     async jwt({ token, account, user }: { token: JWT; account: any; user: any }) {
       if (user) {
