@@ -4,11 +4,15 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
-    server: https://acme-v02.api.letsencrypt.org/directory
     email: raiashwin005@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
-      name: letsencrypt-prod
+      name: letsencrypt-prod-key
     solvers:
-    - http01:
-        ingress:
-          class: nginx
+      - dns01:
+          cloudflare:
+            email: raiashwin005@gmail.com
+            apiTokenSecretRef:
+              name: cloudflare-api-token-secret
+              key: api-token
+

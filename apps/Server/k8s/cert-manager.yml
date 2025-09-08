@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: devzen-wildcard-cert
+  namespace: default
+spec:
+  secretName: devzen-wildcard-cert
+  dnsNames:
+    - '*.devzen.ashprojects.tech'
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+
