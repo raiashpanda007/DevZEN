@@ -3,7 +3,7 @@ import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Editor } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { useDebounce } from "react-use";
-import ChatWithAshna_Assistant from "@workspace/ui/components/Code/ChatWithAshna-Assistant";
+
 import Console from "@workspace/ui/components/Code/Console";
 import type { File as FileTypes } from "@workspace/types";
 import { Type } from "@workspace/types";
@@ -368,7 +368,6 @@ const MonacoEditor = ({
     <div className="flex flex-col h-full w-full overflow-hidden">
       {/* Button Bar - Fixed at top */}
       <div className="flex w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 z-10 flex-shrink-0">
-        <ChatWithAshna_Assistant />
         <Console setVisibleStatus={setVisibleStatusConsole} />
         <ShareProjectButton
           setSharedDialogBox={setSharedDialogBox}
