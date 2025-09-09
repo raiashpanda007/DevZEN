@@ -4,7 +4,7 @@ import {prisma} from '@workspace/db'
 import { getServerSession } from "next-auth";
 import NEXT_AUTH_CONFIG from "../../Auth/auth_Config";
 import { CreateProjectSchema} from '@workspace/types'
-import { Templates } from "@prisma/client";
+import type { Templates } from "@prisma/client";
 import axios from "axios";
 
 
