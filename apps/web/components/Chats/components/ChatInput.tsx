@@ -2,7 +2,7 @@ import React from 'react'
 import { Input } from '@workspace/ui/components/input'
 function ChatInput() {
   return (
-    <div>ChatInput</div>
+    <Input className='w-full h-1/6' />
   )
 }
 
