@@ -71,7 +71,7 @@ function ProjectsItem({
 
       <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 basis-1/3 sm:basis-1/4 justify-end">
         <DeleteProjectButton projectId={id} />
-        <DownloadProjectButton />
+        <DownloadProjectButton id={id} name={name}/>
       </div>
     </div>
   );

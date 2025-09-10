@@ -10,17 +10,18 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0",
     "@monaco-editor/loader": "^1.5.0",
     "@monaco-editor/react": "^4.7.0",
     "@prisma/client": "6.3.1",
     "@reduxjs/toolkit": "^2.5.1",
     "@types/aws-sdk": "^2.7.4",
-  "@aws-sdk/client-s3": "^3.0.0",
-  "@aws-sdk/s3-request-presigner": "^3.0.0",
     "@workspace/db": "workspace:**",
     "@workspace/ui": "workspace:*",
     "aws-sdk": "^2.1692.0",
     "axios": "^1.8.2",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.4.3",
     "lucide-react": "0.456.0",
     "monaco-editor": "^0.52.2",
@@ -36,6 +37,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "18.3.0",
     "@types/react-dom": "18.3.1",
