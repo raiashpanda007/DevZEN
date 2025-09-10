@@ -11,10 +11,10 @@ const region = process.env.AWS_S3_REGION ?? "";
 const bucket = process.env.AWS_S3_BUCKET_NAME ?? "";
 
 const s3Client = new S3Client({
-    region: region,
+    region: region || "",
     credentials: {
-        accessKeyId: accessKey,
-        secretAccessKey: secretKey
+        accessKeyId: accessKey || "",
+        secretAccessKey: secretKey || ""
     },
 })
 
