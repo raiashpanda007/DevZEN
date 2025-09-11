@@ -50,7 +50,7 @@ function ProjectsItem({
         onClick={onClick}
       >
         <img
-          src={templateImg}
+          src={templateImg && (templateImg.startsWith('/') ? templateImg : `/${templateImg}`)}
           alt="Template"
           className={
             templateImg === "next.svg"

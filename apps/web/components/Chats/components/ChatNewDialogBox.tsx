@@ -84,7 +84,7 @@ function ChatNewDialogBox() {
       "selected Project :: ",
       selectedProject
     );
-  // close dialog after successful submit
+
   setOpen(false);
   };
   return (
