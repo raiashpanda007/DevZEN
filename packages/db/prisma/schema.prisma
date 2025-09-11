@@ -9,22 +9,74 @@ datasource db {
 
 model User {
   id        String     @id @default(cuid())
-  username  String     
+  username  String
   email     String     @unique
   Account   Account    @default(GOOGLE)
   profile   String?
   createdAt DateTime   @default(now())
   Projects  Projects[]
+  Chats     Chats[]
 }
 
 model Projects {
-  id        String    @id @default(cuid())
+  id         String    @id @default(cuid())
+  name       String
+  template   Templates
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  Chats      Chats[]
+  createdAt  DateTime  @default(now())
+  share_code String    @default(uuid())
+}
+
+model Chats {
+  id        String     @id @default(cuid())
   name      String
-  template  Templates
-  user      User      @relation(fields: [userId], references: [id])
   userId    String
-  createdAt DateTime  @default(now())
-  share_code String   @default(uuid())
+  user      User       @relation(fields: [userId], references: [id])
+  projectId String
+  project   Projects   @relation(fields: [projectId], references: [id])
+  messages  Messages[]
+  mode      Mode
+  createdAt DateTime   @default(now())
+}
+
+model ChatFiles {
+  id           String         @id @default(cuid())
+  fileName     String
+  filePath     String
+  vectorId     String?
+  MessageFiles MessageFiles[]
+}
+
+model Messages {
+  id           String         @id @default(cuid())
+  content      String
+  chatId       String
+  chat         Chats          @relation(fields: [chatId], references: [id])
+  type         MessageType
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  MessageFiles MessageFiles[]
+}
+
+model MessageFiles {
+  id        String    @id @default(cuid())
+  messageId String
+  message   Messages  @relation(fields: [messageId], references: [id])
+  fileId    String
+  file      ChatFiles @relation(fields: [fileId], references: [id])
+}
+
+enum Mode {
+  Agent
+  Edit
+  Review
+}
+
+enum MessageType {
+  Send
+  Recieve
 }
 
 enum Templates {
