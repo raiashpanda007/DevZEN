@@ -10,7 +10,7 @@ function Page() {
   return (
     <div className="relative flex w-full h-full">
       <ChatSection isSidebarOpen={isSidebarOpen} />
-      <ChatsSidebar isSidebarOpen={isSidebarOpen} />
+      <ChatsSidebar isSidebarOpen={isSidebarOpen} selectedChatID="" />
       <Button
         className="absolute top-2 right-5"
         variant={"ghost"}

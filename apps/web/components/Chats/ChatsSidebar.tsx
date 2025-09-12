@@ -8,13 +8,14 @@ import { useState } from "react";
 import ChatListItem from "./components/ChatListItem";
 interface ChatSidebarProps {
   isSidebarOpen: boolean;
+  selectedChatID:string;
 }
 interface ChatsData {
   id: string;
   name: string;
   mode: string;
 }
-function ChatsSidebar({ isSidebarOpen }: ChatSidebarProps) {
+function ChatsSidebar({ isSidebarOpen,selectedChatID }: ChatSidebarProps) {
   const [allChats, setAllChats] = useState<ChatsData[] | []>([]);
   const [selectedChat, setSelectedChat] = useState<ChatsData | null>(null);
   return (
@@ -38,7 +39,7 @@ function ChatsSidebar({ isSidebarOpen }: ChatSidebarProps) {
       </div>
 
       <ScrollArea className="h-5/6 border-red-500">
-
+      
         
       </ScrollArea>
     </div>
