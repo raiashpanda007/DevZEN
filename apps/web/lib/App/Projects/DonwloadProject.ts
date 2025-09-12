@@ -3,7 +3,8 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import Response from "@/lib/Utils/Response";
 import { z as zod } from "zod";
 import { NextRequest, NextResponse } from "next/server";
-
+import { getServerSession } from "next-auth";
+import NEXT_AUTH_CONFIG from "@/lib/Auth/auth_Config";
 
 const accessKey = process.env.AWS_S3_ACCESS_KEY ?? "";
 const secretKey = process.env.AWS_S3_SECRET_KEY ?? "";
@@ -25,6 +26,10 @@ const DownloadProjectSchema = zod.object({
 
 
 const GenerateSignedURLs = async (req: NextRequest) => {
+    const currUser = await getServerSession(NEXT_AUTH_CONFIG);
+    if (!currUser || !currUser.user) {
+        return NextResponse.json(new Response(404, "Unauthorized to download project", {}), { status: 404 })
+    }
     try {
         const body = await req.json();
         const parsedBody = DownloadProjectSchema.safeParse(body);
