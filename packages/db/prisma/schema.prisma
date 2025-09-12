@@ -34,8 +34,8 @@ model Chats {
   name      String
   userId    String
   user      User       @relation(fields: [userId], references: [id])
-  projectId String
-  project   Projects   @relation(fields: [projectId], references: [id])
+  projectId String?
+  project   Projects?  @relation(fields: [projectId], references: [id])
   messages  Messages[]
   mode      Mode
   createdAt DateTime   @default(now())

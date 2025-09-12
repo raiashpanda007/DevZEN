@@ -70,7 +70,12 @@ function Search({ selectedTemplate, setSelectedTemplate }: SearchProps) {
             <Label>Selected template</Label>
             <div className="flex items-center space-x-3 border p-5 rounded-xl border-white">
               <img
-                src={selectedTemplate.image}
+                src={
+                  selectedTemplate.image &&
+                  (selectedTemplate.image.startsWith("/")
+                    ? selectedTemplate.image
+                    : `/${selectedTemplate.image}`)
+                }
                 alt=""
                 className={
                   selectedTemplate.image === "next.svg"

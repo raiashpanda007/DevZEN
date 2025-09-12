@@ -4,20 +4,36 @@ import { Input } from "@workspace/ui/components/input";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { FiSearch } from "react-icons/fi";
 import { Button } from "@workspace/ui/components/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ChatListItem from "./components/ChatListItem";
+import axios from "axios";
 interface ChatSidebarProps {
   isSidebarOpen: boolean;
-  selectedChatID:string;
+  selectedChatID: string;
 }
 interface ChatsData {
   id: string;
   name: string;
-  mode: string;
+  mode: "Agent" | "Edit" | "Review";
 }
-function ChatsSidebar({ isSidebarOpen,selectedChatID }: ChatSidebarProps) {
+function ChatsSidebar({ isSidebarOpen, selectedChatID }: ChatSidebarProps) {
   const [allChats, setAllChats] = useState<ChatsData[] | []>([]);
   const [selectedChat, setSelectedChat] = useState<ChatsData | null>(null);
+
+  const getAllChats = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BASE_HTTP_URL}/chat`
+      );
+      setAllChats(response.data.data as ChatsData[]);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  };
+  useEffect(() => {
+    getAllChats();
+  }, []);
   return (
     <div
       className={
@@ -39,8 +55,25 @@ function ChatsSidebar({ isSidebarOpen,selectedChatID }: ChatSidebarProps) {
       </div>
 
       <ScrollArea className="h-5/6 border-red-500">
-      
-        
+        {allChats.map((chat) =>
+          chat.id === selectedChatID ? (
+            <ChatListItem
+              id={chat.id}
+              isSelected={true}
+              mode={chat.mode}
+              name={chat.name}
+              key={chat.id}
+            />
+          ) : (
+            <ChatListItem
+              id={chat.id}
+              isSelected={false}
+              mode={chat.mode}
+              name={chat.name}
+              key={chat.id}
+            />
+          )
+        )}
       </ScrollArea>
     </div>
   );
