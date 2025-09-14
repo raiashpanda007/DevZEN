@@ -39,10 +39,10 @@ function ChatListItem({
     "flex border rounded-md my-2 px-2 py-2 cursor-pointer items-center transition-colors duration-200 ease-in-out -z-10";
 
   const hoverFocusClasses =
-    "hover:bg-gray-800 focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-300";
+    "dark:hover:bg-gray-800 hover:bg-gray-300 focus:bg-gray-300 dark:focus:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-300";
 
   const selectedClasses =
-    "bg-gray-700 border-indigo-300 shadow-sm transform scale-[1.002]";
+    "dark:bg-gray-700 bg-gray-200 border-indigo-300 shadow-sm transform scale-[1.002]";
 
   const combined = `${baseClasses} ${hoverFocusClasses} ${isSelected ? selectedClasses : ""}`;
 

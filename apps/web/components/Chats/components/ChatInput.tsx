@@ -1,9 +1,52 @@
-import React from 'react'
-import { Input } from '@workspace/ui/components/input'
-function ChatInput() {
+import { Button } from "@workspace/ui/components/button";
+import { IoMdSend } from "react-icons/io";
+import { MdAttachFile } from "react-icons/md";
+import { Textarea } from "@workspace/ui/components/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@workspace/ui/components/tooltip";
+interface ChatInputProps {
+  isDisabled: boolean;
+}
+function ChatInput({ isDisabled = true }: ChatInputProps) {
   return (
-    <Input className='w-full h-1/6' />
-  )
+    <div className=" w-full h-1/6 flex items-center justify-evenly border bg-transparent">
+      <Textarea
+        className="w-4/5 h-1/2 "
+        disabled={isDisabled}
+        placeholder="Type your question or task... Ashna will Edit, Review, or Build 🚀"
+      />
+      <div className=" flex space-x-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" disabled={isDisabled}>
+                <MdAttachFile />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add project File</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button disabled={isDisabled}>
+                <IoMdSend />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Send</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </div>
+  );
 }
 
-export default ChatInput
+export default ChatInput;
