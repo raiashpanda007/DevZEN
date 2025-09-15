@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import ChatInput from "./components/ChatInput";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { useParams } from "next/navigation";
+import Message from "./components/Message";
 interface ChatSectionProps {
   isSidebarOpen: boolean;
 }
@@ -26,7 +27,8 @@ function ChatSection({ isSidebarOpen }: ChatSectionProps) {
       }
     >
       {chatId ? (
-        <ScrollArea className="w-full h-5/6"></ScrollArea>
+        <ScrollArea className="w-full h-5/6 flex flex-col gap-2">
+        </ScrollArea>
       ) : (
         <ScrollArea className="w-full h-5/6 flex flex-col items-center justify-center p-6 gap-6 overflow-auto">
           <header className="text-center">
@@ -62,7 +64,9 @@ function ChatSection({ isSidebarOpen }: ChatSectionProps) {
             </div>
           </section>
           <h3 className="text-center my-3">
-            Meet <span className="text-[#F26307] font-bold text-2xl">Ashna</span> Your AI assistant that adapts to how you code.
+            Meet{" "}
+            <span className="text-[#F26307] font-bold text-2xl">Ashna</span>{" "}
+            Your AI assistant that adapts to how you code.
           </h3>
 
           <section className="w-full max-w-4xl mt-4">
