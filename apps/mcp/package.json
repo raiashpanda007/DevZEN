@@ -1,0 +1,27 @@
+{
+  "name": "mcp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "tsbuild": "esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js ",
+    "build": "pnpm tsbuild",
+    "dev": "node dist/index.js",
+    "start": "pnpm tsbuild && pnpm dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "esbuild": "^0.25.0",
+    "express": "^4.21.2",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.1",
+    "@types/ws": "^8.18.0",
+    "cors": "^2.8.5"
+  }
+}
