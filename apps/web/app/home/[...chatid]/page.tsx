@@ -5,11 +5,13 @@ import ChatSection from "@/components/Chats/ChatSection";
 import { useParams } from "next/navigation";
 import { Button } from "@workspace/ui/components/button";
 import { useState, useEffect } from "react";
+import { useSocket } from "@/hooks/useSocket";
 
 function Page() {
   const { chatid } = useParams();
   const [isSidebarOpen, setSidebar] = useState<boolean>(true);
   const [selectedChatId, setSelectedChatId] = useState<string>("");
+  const socket = useSocket();
   useEffect(() => {
     if (!chatid || !chatid[0]) {
       setSelectedChatId("");

@@ -14,3 +14,8 @@ services:
     restart: always
     ports:
       - "6379:6379"
+  vectordb:
+    image: qdrant/qdrant:latest
+    restart: always
+    ports:
+      - "6333:6333"
