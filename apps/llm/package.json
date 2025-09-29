@@ -1,5 +1,5 @@
 {
-  "name": "mcp",
+  "name": "llm",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -16,7 +16,8 @@
     "dotenv": "^16.4.7",
     "esbuild": "^0.25.0",
     "express": "^4.21.2",
-    "ws": "^8.18.3"
+    "ws": "^8.18.3",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -10,6 +10,7 @@ import {
 } from "@workspace/ui/components/tooltip";
 interface ChatInputProps {
   isDisabled: boolean;
+  chatId: string;
 }
 function ChatInput({ isDisabled = true }: ChatInputProps) {
   return (
@@ -35,7 +36,9 @@ function ChatInput({ isDisabled = true }: ChatInputProps) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button disabled={isDisabled}>
+              <Button
+                disabled={isDisabled}
+                className="bg-[#f26307] hover:bg-[#f26310]">
                 <IoMdSend />
               </Button>
             </TooltipTrigger>

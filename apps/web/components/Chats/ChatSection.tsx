@@ -5,12 +5,44 @@ import ChatInput from "./components/ChatInput";
 import { ScrollArea } from "@workspace/ui/components/scroll-area";
 import { useParams } from "next/navigation";
 import Message from "./components/Message";
+import type { MessageProps } from "./components/Message";
+import axios from "axios";
 interface ChatSectionProps {
   isSidebarOpen: boolean;
 }
 function ChatSection({ isSidebarOpen }: ChatSectionProps) {
   const [chatId, setChatId] = useState<string>("");
+  const [allChats, setAllChats] = useState<MessageProps[]>([]);
   const { chatid } = useParams();
+  const getAllChats = async (chatId: string) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_MCP_SERVER_URL}/messages`,
+        {
+          params: {
+            chatId,
+          },
+        }
+      );
+      const data = response.data.data;
+      setAllChats(data);
+    } catch (error) {
+      console.error(error);
+      return;
+    }
+  };
+  const sendChat = async (chatId: string, message: string) => {
+    try {
+      await axios.post(`${process.env.NEXT_MCP_SERVER_URL}/messages`, {
+        message,
+        chatId,
+      });
+    } catch (error) {
+      console.error("Unable to send message :: ", error);
+      return;
+    }
+  };
+
   useEffect(() => {
     if (!chatid || !chatid[0]) {
       setChatId("");
@@ -18,6 +50,9 @@ function ChatSection({ isSidebarOpen }: ChatSectionProps) {
     }
     setChatId(chatid[0] as string);
   }, [chatid]);
+
+  
+
   return (
     <div
       className={
@@ -28,6 +63,9 @@ function ChatSection({ isSidebarOpen }: ChatSectionProps) {
     >
       {chatId ? (
         <ScrollArea className="w-full h-5/6 flex flex-col gap-2">
+          {allChats.map((chat) => (
+            <Message key={chat.id} {...chat} />
+          ))}
         </ScrollArea>
       ) : (
         <ScrollArea className="w-full h-5/6 flex flex-col items-center justify-center p-6 gap-6 overflow-auto">
@@ -145,7 +183,7 @@ function ChatSection({ isSidebarOpen }: ChatSectionProps) {
         </ScrollArea>
       )}
 
-      <ChatInput isDisabled={!chatId} />
+      <ChatInput isDisabled={!chatId} chatId={chatId} />
     </div>
   );
 }
