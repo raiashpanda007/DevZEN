@@ -129,7 +129,7 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0
 
-  apps/mcp:
+  apps/llm:
     dependencies:
       dotenv:
         specifier: ^16.4.7
