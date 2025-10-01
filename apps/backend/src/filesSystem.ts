@@ -19,12 +19,62 @@ const resolvePath = (input: string) => (
 
 export const UncompressFolder = async (projectPath: string) => {
     const projectId = p.basename(projectPath);
-    const zipFilePath = p.join(projectPath, `${projectId}.zip`);
+    const zipFileName = `${projectId}.zip`;
+    const zipFilePath = p.join(projectPath, zipFileName);
+
+    if (!fs.existsSync(zipFilePath)) {
+        console.warn(`Zip file not found for project '${projectId}' at ${zipFilePath}`);
+        return;
+    }
+
+    const cleanupTempDir = (tempDir: string) => {
+        if (fs.existsSync(tempDir)) {
+            fs.rmSync(tempDir, { recursive: true, force: true });
+        }
+    };
+
     try {
-        const zip = new AdmZip(zipFilePath);
-        zip.extractAllTo(projectPath, true);
-        fs.rmSync(zipFilePath); // Remove only the zip file after extraction
-        console.log("Decompressed successfully:", zipFilePath);
+        let currentZipPath = zipFilePath;
+
+        while (fs.existsSync(currentZipPath)) {
+            const zip = new AdmZip(currentZipPath);
+            const tempExtractDir = p.join(projectPath, `.__extract_${Date.now()}`);
+            cleanupTempDir(tempExtractDir);
+            fs.mkdirSync(tempExtractDir, { recursive: true });
+
+            zip.extractAllTo(tempExtractDir, true);
+            fs.rmSync(currentZipPath, { recursive: true, force: true });
+
+            const extractedItems = fs.readdirSync(tempExtractDir);
+
+            if (extractedItems.length === 1 && extractedItems[0] === zipFileName) {
+                // Nested zip (zip-of-zip) scenario – move the inner zip to the project path and continue the loop.
+                const nestedZipSource = p.join(tempExtractDir, zipFileName);
+                fs.renameSync(nestedZipSource, currentZipPath);
+                cleanupTempDir(tempExtractDir);
+                continue;
+            }
+
+            // Remove any stale files before moving the fresh contents in
+            fs.readdirSync(projectPath).forEach((entry) => {
+                if (entry !== zipFileName && !entry.startsWith(".__extract_")) {
+                    fs.rmSync(p.join(projectPath, entry), { recursive: true, force: true });
+                }
+            });
+
+            for (const item of extractedItems) {
+                const source = p.join(tempExtractDir, item);
+                const destination = p.join(projectPath, item);
+                if (fs.existsSync(destination)) {
+                    fs.rmSync(destination, { recursive: true, force: true });
+                }
+                fs.renameSync(source, destination);
+            }
+
+            cleanupTempDir(tempExtractDir);
+            console.log("Decompressed successfully:", zipFilePath);
+            break;
+        }
     } catch (error) {
         console.error("Failed to decompress the folder:", error);
     }
@@ -173,45 +223,78 @@ export const CompressFolder = async () => {
     if (!fs.existsSync(workspaceDir)) {
         fs.mkdirSync(workspaceDir, { recursive: true });
     }
+
     try {
         const folders = fs.readdirSync(workspaceDir).filter((name) => {
+            if (name.startsWith(".")) {
+                return false;
+            }
             const completePath = p.join(workspaceDir, name);
-            return fs.statSync(completePath).isDirectory();
-        });
-        if (folders.length !== 1) {
-            console.error("Expecting one folder to compress");
-            return;
-        }
-        const projectId = folders[0];
-        if (!projectId) {
-            console.error("Can't find the folder to compress");
-            return;
-        }
-        const projectPath = p.join(workspaceDir, projectId);
-        const zip = new AdmZip();
-        const items = fs.readdirSync(projectPath);
-        for (const item of items) {
-            const fullPath = p.join(projectPath, item);
-            const relativePath = item;
-            if (fs.statSync(fullPath).isDirectory()) {
-                zip.addLocalFolder(fullPath, relativePath);
-            } else {
-                zip.addLocalFile(fullPath, "", relativePath);
+            try {
+                return fs.statSync(completePath).isDirectory();
+            } catch (err) {
+                console.warn(`Skipping ${completePath} while compressing workspace`, err);
+                return false;
             }
-        }
-        const outputZipPath = p.join(projectPath, `${projectId}.zip`);
-        zip.writeZip(outputZipPath);
+        });
 
-        fs.readdirSync(projectPath).forEach(item => {
-            if (item !== `${projectId}.zip`) {
-                const fullPath = p.join(projectPath, item);
-                fs.rmSync(fullPath, { recursive: true, force: true });
+        if (folders.length === 0) {
+            console.warn("No project folders found to compress");
+            return;
+        }
+
+        for (const projectId of folders) {
+            const projectPath = p.join(workspaceDir, projectId);
+            const zipFileName = `${projectId}.zip`;
+            const outputZipPath = p.join(projectPath, zipFileName);
+
+            const items = fs.readdirSync(projectPath).filter((item) => item !== zipFileName);
+
+            if (items.length === 0) {
+                console.warn(`Skipping compression for '${projectId}' – no files found to archive.`);
+                continue;
             }
-        });
+
+            const zip = new AdmZip();
+
+            for (const item of items) {
+                const fullPath = p.join(projectPath, item);
+
+                let stats: fs.Stats;
+                try {
+                    stats = fs.statSync(fullPath);
+                } catch (error) {
+                    console.warn(`Skipping '${fullPath}' while creating archive`, error);
+                    continue;
+                }
+
+                if (stats.isDirectory()) {
+                    zip.addLocalFolder(fullPath, item);
+                } else if (stats.isFile()) {
+                    zip.addLocalFile(fullPath, "", item);
+                }
+            }
+
+            if (zip.getEntries().length === 0) {
+                console.warn(`Zip for project '${projectId}' would be empty, skipping.`);
+                continue;
+            }
+
+            zip.writeZip(outputZipPath);
+
+            fs.readdirSync(projectPath).forEach((item) => {
+                if (item !== zipFileName) {
+                    const fullPath = p.join(projectPath, item);
+                    fs.rmSync(fullPath, { recursive: true, force: true });
+                }
+            });
+
+            console.log(`Compressed workspace for project '${projectId}'`);
+        }
     } catch (error) {
-        console.error("Error in compressing folder", error)
+        console.error("Error in compressing folder", error);
     }
-}
+};
 
 
 

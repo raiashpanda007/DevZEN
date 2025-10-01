@@ -481,12 +481,7 @@ const MonacoEditor = ({
         />
       </div>
 
-      {/* WARNING NOTE: advise editing only when terminal is closed */}
-      {visibleStatusConsole && (
-        <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-200">
-          Please make changes while the terminal is closed — working on a terminal/edit sync fix.
-        </div>
-      )}
+      
 
       {/* Main Content Area - Takes remaining height */}
       <div className="flex-1 min-h-0 overflow-hidden">
