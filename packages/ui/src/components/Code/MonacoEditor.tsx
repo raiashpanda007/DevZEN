@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import { useDebounce } from "react-use";
 import Console from "@workspace/ui/components/Code/Console";
 import type { File as FileTypes } from "@workspace/types";
-import { Type } from "@workspace/types";
+import { Type, Messages } from "@workspace/types";
 import { getLanguageFromFileName } from "@workspace/ui/lib/getLanguagefromName";
 import ShareProjectButton from "@workspace/ui/components/Code/ShareProject";
 import { Input } from "@workspace/ui/components/input";
@@ -192,19 +192,34 @@ const MonacoEditor = ({
   const [visibleStatusConsole, setVisibleStatusConsole] = useState(false);
   const [shareURL, setShareURL] = useState<string | null>(null);
   const [isEditorReady, setIsEditorReady] = useState(false);
+  const editorInstanceCounterRef = useRef(0);
+  const [editorInstanceVersion, setEditorInstanceVersion] = useState(0);
   const { theme: currTheme } = useTheme();
 
   // Convert IdId to string for terminal component
 
+  const lastValidFileRef = useRef<FileTypes | undefined>(undefined);
+  if (selectedFile && selectedFile.type === Type.FILE) {
+    lastValidFileRef.current = selectedFile;
+  }
+  const activeFile = lastValidFileRef.current;
 
   const currentFilePath = useMemo(
-    () => selectedFile?.path,
-    [selectedFile?.path]
+    () => activeFile?.path,
+    [activeFile?.path]
   );
   const currentFileContent = useMemo(
-    () => selectedFile?.content || "",
-    [selectedFile?.content]
+    () => activeFile?.content || "",
+    [activeFile?.content]
   );
+
+  const { MESSAGE_SAVE_FILE_CONTENT } = Messages;
+  const latestContentRef = useRef<string>("");
+  const serverContentCacheRef = useRef<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    latestContentRef.current = content;
+  }, [content]);
 
   // Use debounced content for WebSocket updates
   useDebounce(
@@ -219,7 +234,7 @@ const MonacoEditor = ({
         // Send debounced content updates to WebSocket
         socket.send(
           JSON.stringify({
-            type: "file_update",
+            type: MESSAGE_SAVE_FILE_CONTENT,
             payload: {
               content: content,
               filePath: currentFilePath,
@@ -248,6 +263,8 @@ const MonacoEditor = ({
     ) => {
       editorRef.current = editor;
       monacoRef.current = monaco;
+      editorInstanceCounterRef.current += 1;
+      setEditorInstanceVersion(editorInstanceCounterRef.current);
       setIsEditorReady(true);
     },
     []
@@ -256,7 +273,7 @@ const MonacoEditor = ({
   // Setup model and language support when selectedFile changes
   useEffect(() => {
     if (
-      !selectedFile ||
+      !activeFile ||
       !monacoRef.current ||
       !editorRef.current ||
       !isEditorReady
@@ -265,19 +282,101 @@ const MonacoEditor = ({
 
     const monaco = monacoRef.current;
     const editor = editorRef.current;
-    const language = getLanguageFromFileName(selectedFile.name);
-    const modelUri = monaco.Uri.parse(`inmemory://model${selectedFile.path}`);
+    const language = getLanguageFromFileName(activeFile.name);
+
+    const languageToExt = (lang: string | undefined) => {
+      switch (lang) {
+        case "typescript":
+          return "ts";
+        case "javascript":
+          return "js";
+        case "python":
+          return "py";
+        case "json":
+          return "json";
+        case "html":
+          return "html";
+        case "css":
+          return "css";
+        case "markdown":
+          return "md";
+        default:
+          return "txt";
+      }
+    };
+
+    const sanitizeSegment = (segment: string | undefined, fallback: string) => {
+      if (!segment) return fallback;
+      return segment
+        .toString()
+        .trim()
+        .replace(/\\/g, "/")
+        .split("/")
+        .filter(Boolean)
+        .join("_")
+        .slice(0, 100) || fallback;
+    };
+
+    let filename = activeFile.name?.trim();
+    if (!filename || filename.length === 0) {
+      filename = sanitizeSegment(activeFile.id, "untitled");
+    }
+    if (!filename.includes(".")) {
+      filename = `${filename}.${languageToExt(language)}`;
+    }
+
+    const projectSegment = sanitizeSegment(projectId, "project");
+    const fileSegment = sanitizeSegment(activeFile.id, "file");
+    const normalizedPath = `/${projectSegment}/${fileSegment}/${filename}`;
+    const modelUri = monaco.Uri.file(normalizedPath);
+
+    // Clean up legacy anonymous in-memory models (e.g., inmemory://model/3)
+    monaco.editor
+      .getModels()
+      .filter((m) => m.uri.scheme === "inmemory" && m.uri.authority === "model" && !m.uri.path.includes("."))
+      .forEach((m) => m.dispose());
 
     try {
       // Check if model already exists
-      let model =
-        monaco.editor.getModel(modelUri) ||
-        monaco.editor.createModel(currentFileContent, language, modelUri);
-      editor.setModel(model);
-      model.setValue(currentFileContent);
+      const existingModel = monaco.editor.getModel(modelUri);
+      const modelUriString = modelUri.toString();
+      const cache = serverContentCacheRef.current;
+      const serverContent = currentFileContent ?? "";
+      let model = existingModel;
 
-      // Set content state
-      setContent(currentFileContent);
+      if (!model) {
+        model = monaco.editor.createModel(serverContent, language, modelUri);
+        cache.set(modelUriString, serverContent);
+      } else {
+        const previousServerContent = cache.get(modelUriString);
+        const modelValue = model.getValue();
+        const serverContentChanged = previousServerContent !== serverContent;
+        const hasUnsavedChanges =
+          previousServerContent !== undefined &&
+          modelValue !== previousServerContent;
+
+        if (previousServerContent === undefined) {
+          cache.set(modelUriString, serverContent);
+        } else if (serverContentChanged) {
+          cache.set(modelUriString, serverContent);
+          if (!hasUnsavedChanges || modelValue.length === 0) {
+            model.setValue(serverContent);
+          }
+        }
+      }
+
+      const previousModel = editor.getModel();
+      if (previousModel && previousModel !== model) {
+        const uri = previousModel.uri;
+        if (uri.scheme === "inmemory" && uri.authority === "model") {
+          previousModel.dispose();
+        }
+      }
+
+      editor.setModel(model);
+
+      // Keep local content in sync with model (prefer model's value to preserve unsaved edits)
+      setContent(model.getValue());
 
       // Configure TypeScript/JavaScript language support
       if (language === "typescript" || language === "javascript") {
@@ -299,7 +398,7 @@ const MonacoEditor = ({
     } catch (error) {
       console.error("Failed to setup Monaco model:", error);
     }
-  }, [selectedFile, isEditorReady, currentFileContent]);
+  }, [activeFile, isEditorReady, currentFileContent, projectId, editorInstanceVersion]);
 
   // Listen for editor content changes
   useEffect(() => {
@@ -316,44 +415,52 @@ const MonacoEditor = ({
     return () => {
       disposable.dispose();
     };
-  }, [isEditorReady, selectedFile?.path]);
+  }, [isEditorReady, activeFile?.path, editorInstanceVersion]);
 
   // Trigger layout update when console visibility changes
   useEffect(() => {
     if (editorRef.current && isEditorReady) {
       // Small delay to ensure DOM has updated
       setTimeout(() => {
-        editorRef.current?.layout();
-        // Force a model refresh to restore syntax highlighting
-        const model = editorRef.current?.getModel();
+        const editor = editorRef.current!;
+        // remember current editor buffer before layout/reset
+        const currentValue = editor.getValue();
+        editor.layout();
+
+        // Force a model refresh to restore syntax highlighting and preserve buffer
+        const model = editor.getModel();
         if (model && monacoRef.current) {
-          const language = getLanguageFromFileName(selectedFile?.name || '');
+          const language = getLanguageFromFileName(activeFile?.name || "");
           monacoRef.current.editor.setModelLanguage(model, language);
+          // restore editor content if layout/refresh changed it
+          if (model.getValue() !== currentValue) {
+            model.setValue(currentValue);
+          }
         }
       }, 150); // Increased delay slightly
     }
-  }, [visibleStatusConsole, isEditorReady, selectedFile?.name]);
+  }, [visibleStatusConsole, isEditorReady, activeFile?.name, editorInstanceVersion]);
 
   const sendImmediateUpdate = useCallback(() => {
     if (
       content &&
-      selectedFile &&
+      activeFile &&
       socket &&
       socket.readyState === WebSocket.OPEN
     ) {
       socket.send(
         JSON.stringify({
-          type: "file_update",
+          type: MESSAGE_SAVE_FILE_CONTENT,
           payload: {
             content: content,
-            filePath: selectedFile.path,
+            filePath: activeFile.path,
           },
         })
       );
     }
-  }, [content, selectedFile, socket]);
+  }, [content, activeFile, socket]);
 
-  if (!selectedFile || selectedFile.type !== Type.FILE) {
+  if (!activeFile) {
     return null;
   }
 
@@ -374,13 +481,17 @@ const MonacoEditor = ({
         />
       </div>
 
+      {/* WARNING NOTE: advise editing only when terminal is closed */}
+      {visibleStatusConsole && (
+        <div className="px-3 py-2 bg-yellow-50 dark:bg-yellow-900/30 border-b border-yellow-200 dark:border-yellow-700 text-sm text-yellow-800 dark:text-yellow-200">
+          Please make changes while the terminal is closed — working on a terminal/edit sync fix.
+        </div>
+      )}
+
       {/* Main Content Area - Takes remaining height */}
       <div className="flex-1 min-h-0 overflow-hidden">
         {visibleStatusConsole ? (
-          <ResizablePanelGroup
-            direction="vertical"
-            className="h-full w-full"
-          >
+          <ResizablePanelGroup direction="vertical" className="h-full w-full">
             {/* Editor Panel */}
             <ResizablePanel defaultSize={70} minSize={30}>
               <div className="h-full w-full overflow-hidden">
@@ -388,7 +499,6 @@ const MonacoEditor = ({
                   className="relative"
                   height="100%"
                   theme={theme}
-                  value={content}
                   onMount={handleEditorMount}
                   options={{
                     fontSize: 14,
@@ -444,7 +554,6 @@ const MonacoEditor = ({
               className="relative"
               height="100%"
               theme={theme}
-              value={content}
               onMount={handleEditorMount}
               options={{
                 fontSize: 14,
