@@ -45,12 +45,11 @@ model ChatFiles {
   id           String         @id @default(cuid())
   fileName     String
   filePath     String
-  vectorId     String?
   MessageFiles MessageFiles[]
 }
 
 model Messages {
-  id           String         @id @default(cuid())
+  id           String         @id @default(cuid()) 
   content      String
   chatId       String
   chat         Chats          @relation(fields: [chatId], references: [id])

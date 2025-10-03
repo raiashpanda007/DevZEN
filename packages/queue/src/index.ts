@@ -1,12 +1,10 @@
-import Redis from "ioredis";
+import { Queue } from "bullmq";
 
-let redisInstance: Redis | null = null;
+const queue = new Queue('llm-queue', {
+    connection: {
+        host: 'localhost',
+        port: 6379,
+    },
+});
 
-function getRedisInstance() {
-  if (!redisInstance) {
-    redisInstance = new Redis({ host: 'localhost' });
-  }
-  return redisInstance;
-}
-
-export default getRedisInstance();
+export default queue;
