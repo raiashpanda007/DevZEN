@@ -1,0 +1,26 @@
+{
+  "name": "mcp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "tsbuild": "esbuild src/server.ts --bundle --platform=node --outfile=dist/server.js ",
+    "build": "pnpm tsbuild",
+    "dev": "node dist/server.js",
+    "start": "pnpm tsbuild && pnpm dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "axios": "^1.8.2",
+    "dotenv": "^16.4.7",
+    "esbuild": "^0.25.0",
+    "express": "^4.21.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1"
+  }
+}

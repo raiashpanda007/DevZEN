@@ -169,6 +169,31 @@ importers:
         specifier: ^0.25.0
         version: 0.25.0
 
+  apps/mcp:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.19.1
+        version: 1.19.1
+      axios:
+        specifier: ^1.8.2
+        version: 1.8.2
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
+      esbuild:
+        specifier: ^0.25.0
+        version: 0.25.0
+      express:
+        specifier: ^4.21.2
+        version: 4.21.2
+      zod:
+        specifier: ^3.23.8
+        version: 3.24.1
+    devDependencies:
+      '@types/express':
+        specifier: ^5.0.1
+        version: 5.0.1
+
   apps/web:
     dependencies:
       '@aws-sdk/client-s3':

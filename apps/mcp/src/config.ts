@@ -3,11 +3,10 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const PORT = process.env.PORT;
-const OPENROUTER_KEY = process.env.OPENROUTER_KEY
+
 function validateConfig() {
   const required = {
-    PORT,
-    OPENROUTER_KEY
+    PORT
   };
   for (const [key, value] of Object.entries(required)) {
     if (!value) {
@@ -17,8 +16,8 @@ function validateConfig() {
   console.log("All required environment variables are set.");
 }
 
-export default validateConfig
+validateConfig();
+
 export {
-    PORT,
-    OPENROUTER_KEY
+    PORT
 }

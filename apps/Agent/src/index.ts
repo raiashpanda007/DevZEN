@@ -2,8 +2,10 @@ import express from "express"
 import http from "http";
 import { WebSocketServer } from "ws"
 import cors from "cors";
+import validateConfig from "./config";
 import { PORT } from "./config";
 
+validateConfig();
 
 const app = express();
 const server = http.createServer(app);

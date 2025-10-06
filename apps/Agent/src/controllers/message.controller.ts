@@ -8,6 +8,7 @@
 import { asyncHandler, Response } from "../utils";
 import queue from "@workspace/queue"
 import axios from "axios";
+import { CreateProject } from "../services/Projects";
 import { prisma } from "@workspace/db/"
 import { z as zod } from "zod"
 
@@ -27,7 +28,7 @@ export const SendMessage = asyncHandler(async (req, res) => {
     if (!parsedBody.success) {
         return res.status(401).json(new Response(401, "Please provide complete info of project", {}));
     }
-    const { chatId } = parsedBody.data
+    const { chatId ,message} = parsedBody.data
 
     // Check project is related to this or not
 
@@ -36,12 +37,25 @@ export const SendMessage = asyncHandler(async (req, res) => {
             id: chatId
         }, 
         include: {
-            project: true
+            project: true,
+            user:true
         }
     });
+    const userId = await prisma.user.findFirst({
+        where:{
+            Chats:{
+                some:{
+                    id:chatId
+                }
+            }
+        }
+    })
+    if(!userId) {
+        return res.status(400).json(new Response(401, "Please provide valid chatId",{}))
+    }
     if(!project || !project.projectId) {
         // create project 
-
+        await CreateProject(message,userId.id)
     }
 
 
