@@ -3,6 +3,8 @@ import http from "http";
 import { WebSocketServer } from "ws"
 import cors from "cors";
 import validateConfig from "./config";
+import MessageRouter from "./routes/message.routes"
+
 import { PORT } from "./config";
 
 validateConfig();
@@ -29,7 +31,7 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
-
+app.use('/message',MessageRouter)
 
 server.listen(PORT, () => {
     console.log(`LLM http and ws server running on ${PORT}`);
