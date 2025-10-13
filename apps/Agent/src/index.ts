@@ -3,8 +3,8 @@ import http from "http";
 import { WebSocketServer } from "ws"
 import cors from "cors";
 import validateConfig from "./config";
-import MessageRouter from "./routes/message.routes"
-
+import { ChatSessionManager } from "./services/ChatSession";
+import MessagesTypes from "./messages";
 import { PORT } from "./config";
 
 validateConfig();
@@ -23,7 +23,49 @@ wss.on("connection", (ws) => {
             data: "ACCEPTED NEW CONNECTION"
         }
     }))
-})
+    ws.on("message", async (data) => {
+        try {
+            const message = JSON.parse(data.toString());
+            const { type, payload } = message;
+
+
+            if (type == MessagesTypes.INIT_CHAT_SESSION) {
+                const { chatId } = payload.data
+                if (!chatId) {
+                    return ws.send(JSON.stringify({
+                        type: MessagesTypes.INVALID_REQUEST,
+                        payload: {
+                            data: {
+                                message: "Please provide chatId"
+                            }
+                        }
+                    }))
+                }
+                new ChatSessionManager(chatId, ws)
+                ws.send(JSON.stringify({
+                    type: MessagesTypes.INITIATED_SESSION,
+                    payload: {
+                        data: {}
+                    }
+                }))
+
+
+            }
+
+        } catch (error) {
+            return ws.send(JSON.stringify({
+                type: MessagesTypes.INVALID_REQUEST,
+                payload: {
+                    data: {
+                        message: "INTERNAL SERVER ERROR"
+                    }
+                }
+            }))
+
+        }
+    })
+});
+
 
 
 app.use(cors({
@@ -31,7 +73,9 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
-app.use('/message',MessageRouter)
+app.use('/healthz', (req, res): any => {
+    return res.status(200).send("OK");
+})
 
 server.listen(PORT, () => {
     console.log(`LLM http and ws server running on ${PORT}`);

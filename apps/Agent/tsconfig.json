@@ -3,7 +3,7 @@
   "compilerOptions": {
    "paths": {
       "@/*": ["./*"],
-      "@workspace/queue": ["../../packages/queue/src/index.ts"],
+      "@workspace/queue": ["../../packages/queue/src/index"],
       "@workspace/types":["../../packages/types/src/index.ts"],
       "@workspace/db/*": ["../../packages/db/src/index"],
     },
