@@ -3,14 +3,28 @@ import MessagesTypes from "../messages";
 import { z as zod } from "zod";
 import queue from "@workspace/queue"
 import { prisma } from "@workspace/db/"
+import { SystemPrompts } from "../utils/systemPrompts";
+import { LLMClient } from "./LLMclient";
+import Tools from "./tools"
 
+const templateEnum = zod.enum([
+    'node_js',
+    'node_js_typescript',
+    'react',
+    'react_typescript',
+    'cpp',
+    'python',
+    'python_django',
+    'next_js',
+    'next_js_turbo'
+]);
 const PromptMessageSchema = zod.object({
-    chatID:zod.string(),
+    chatID: zod.string(),
     message: zod.string().min(1).max(1000),
     messageFiles: zod.array(
         zod.object({
             path: zod.string(),
-            fileName:zod.string()
+            fileName: zod.string()
         })
     ).optional()
 })
@@ -43,20 +57,20 @@ export class ChatSessionManager {
                                 }
                             }))
                         }
-                        const {message,chatID} = parseData.data;
+                        const { message, chatID } = parseData.data;
 
                         const messageSaved = await prisma.messages.create({
-                            data:{
-                                content:message,
-                                type:"Send",
-                                chat:{
-                                    connect:{
-                                        id:this.id
+                            data: {
+                                content: message,
+                                type: "Send",
+                                chat: {
+                                    connect: {
+                                        id: this.id
                                     }
                                 }
                             }
                         })
-                        await queue.add(`usermessage/${chatID}/${messageSaved.id}`,{
+                        await queue.add(`usermessage/${chatID}/${messageSaved.id}`, {
                             message
                         })
                         console.log("Saved user message in redis")
@@ -80,5 +94,36 @@ export class ChatSessionManager {
                     break;
             }
         })
+    }
+    public CloseServer() {
+        return this.ws.close()
+    }
+    public async AgentCall(Message: string, MessageId: string, ChatId: string, Context: String) {
+        try {
+            const response = await LLMClient.responses.create({
+                model: "openai/gpt-oss-20b:free",
+                input: [
+                    {
+                        role: "system",
+                        content: SystemPrompts.Base
+                    },
+                    {
+                        role: "system",
+                        content: SystemPrompts.Agent
+                    },
+                    {
+                        role:"user",
+                        content:""
+                    }
+                ],
+                tools: Tools as any
+                
+
+            })
+            console.log(response.output);
+        } catch (error) {
+                console.error(error);
+                throw Error("Unable to start agent");
+        }
     }
 }

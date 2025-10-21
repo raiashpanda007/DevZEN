@@ -1,10 +1,12 @@
 import express from "express"
 import http from "http";
 import { WebSocketServer } from "ws"
+import { LocalPubSub } from "./sessionStoreManager";
 import cors from "cors";
 import validateConfig from "./config";
 import { ChatSessionManager } from "./services/ChatSession";
 import MessagesTypes from "./messages";
+import LLMRouter from "./routes/llm.routes"
 import { PORT } from "./config";
 
 validateConfig();
@@ -41,7 +43,11 @@ wss.on("connection", (ws) => {
                         }
                     }))
                 }
-                new ChatSessionManager(chatId, ws)
+                const session = new ChatSessionManager(chatId, ws)
+                if(LocalPubSub.has(chatId)) {
+                    LocalPubSub.get(chatId)?.CloseServer();
+                }
+                LocalPubSub.set(chatId,session)
                 ws.send(JSON.stringify({
                     type: MessagesTypes.INITIATED_SESSION,
                     payload: {
@@ -53,7 +59,8 @@ wss.on("connection", (ws) => {
             }
 
         } catch (error) {
-            return ws.send(JSON.stringify({
+            console.error(error);
+             ws.send(JSON.stringify({
                 type: MessagesTypes.INVALID_REQUEST,
                 payload: {
                     data: {
@@ -76,6 +83,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/healthz', (req, res): any => {
     return res.status(200).send("OK");
 })
+app.use('/llm', LLMRouter)
 
 server.listen(PORT, () => {
     console.log(`LLM http and ws server running on ${PORT}`);
