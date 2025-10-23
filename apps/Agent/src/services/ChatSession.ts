@@ -101,7 +101,7 @@ export class ChatSessionManager {
     public async AgentCall(Message: string, MessageId: string, ChatId: string, Context: String) {
         try {
             const response = await LLMClient.responses.create({
-                model: "openai/gpt-oss-20b:free",
+                model: "qwen/qwen3-235b-a22b:free",
                 input: [
                     {
                         role: "system",
@@ -120,6 +120,7 @@ export class ChatSessionManager {
                 
 
             })
+            this.ws.send(JSON.stringify(response.output))
             console.log(response.output);
         } catch (error) {
                 console.error(error);

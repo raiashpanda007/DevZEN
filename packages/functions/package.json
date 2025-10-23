@@ -1,18 +1,15 @@
 {
-  "name": "@workspace/types",
+  "name": "functions",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "exports": {
     ".": "./src/index.ts"
   },
-  "dependencies": {
-    "zod": "^3.25.76"
-  }
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }

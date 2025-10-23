@@ -20,7 +20,7 @@
     "express": "^4.21.2",
     "openai": "^6.1.0",
     "ws": "^8.18.3",
-    "zod": "^3.23.8"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

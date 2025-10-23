@@ -6,6 +6,7 @@
       "@workspace/queue": ["../../packages/queue/src/index"],
       "@workspace/types":["../../packages/types/src/index.ts"],
       "@workspace/db/*": ["../../packages/db/src/index"],
+      "@workspace/functions" :["../../packages/functions/src/index"]
     },
     "module": "NodeNext",
     "outDir": "./dist",

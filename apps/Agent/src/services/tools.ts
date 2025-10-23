@@ -1,5 +1,5 @@
 import { z as zod } from "zod"
-import type { ChatCompletionTool } from "openai/resources";
+import ToolsList from "@workspace/functions"
 const templateEnum = zod.enum([
     'node_js',
     'node_js_typescript',
@@ -15,8 +15,8 @@ const Tools = [
     {
         strict: true,
         type: "function",
-        name: "Create_Project",
-        description: "Creates a project in the DB for a chat session if no project exists. Should only be called after confirming that no project exists for this session.",
+        name: ToolsList.CREATE_PROJECT,
+        description: "Creates a project in the DB for a chat session if no project exists. Should only be called after confirming that no project exists for this session. Try to name project more of a product type let's say user asks for spotify clone then give it new cool name unless user explicitly said for a particular name",
         parameters: {
             type: "object",
             properties: {
