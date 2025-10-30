@@ -1,4 +1,4 @@
-import { Worker } from "bullmq";
+ import { Worker } from "bullmq";
 import { HOST, PORT } from "./config";
 import { z as zod } from "zod"
 import { ensureQdrantCollection } from "./db";
@@ -31,12 +31,12 @@ const worker = new Worker('llm-embedding-generation-queue', async (job) => {
         // console.error("Worker didn't recieved messageId or chatID")
         throw Error("Worker didn't recieved messageId or chatID");
     }
-
-    const chunks = await ChunkMessages({ message, messageId, chatId });
-    await GenerateAndSaveEmbeddings(chunks);
     const qVector = await GeminiEmbeddings.embedQuery(message);
     console.log("Embeddings :: ", qVector);
     const context = await GetContextFromEmbeddings(message, chatId, qVector);
+    const chunks = await ChunkMessages({ message, messageId, chatId });
+    await GenerateAndSaveEmbeddings(chunks);
+
     return { context, message, messageId, chatId };
 
 }, {
@@ -50,20 +50,6 @@ const worker = new Worker('llm-embedding-generation-queue', async (job) => {
 worker.on("completed", async (job) => {
     console.log(`✅ Job completed: ${job.id}`);
     console.log("Context is here :: ", job.returnvalue);
-    const { chatId, message, messageId, context } = job.returnvalue
-    try {
-
-        const response = await axios.post(process.env.AGENT_URL || "", {
-            chatId: chatId,
-            message: message,
-            messageId: messageId,
-            context: context,
-        })
-        console.log("Response from agent completion", response);
-    } catch (error) {
-        console.error(error);
-        return;
-    }
 
 
 });

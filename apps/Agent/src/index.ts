@@ -8,6 +8,8 @@ import { ChatSessionManager } from "./services/ChatSession";
 import MessagesTypes from "./messages";
 import LLMRouter from "./routes/llm.routes"
 import { PORT } from "./config";
+import { mcpClient } from "./services/McpClient"
+import { MCP_SERVER_URL } from './config'
 
 validateConfig();
 
@@ -15,6 +17,7 @@ const app = express();
 const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server, path: "/ws" });
+const mcp = mcpClient(MCP_SERVER_URL ?? "");
 
 
 wss.on("connection", (ws) => {
@@ -44,10 +47,10 @@ wss.on("connection", (ws) => {
                     }))
                 }
                 const session = new ChatSessionManager(chatId, ws)
-                if(LocalPubSub.has(chatId)) {
+                if (LocalPubSub.has(chatId)) {
                     LocalPubSub.get(chatId)?.CloseServer();
                 }
-                LocalPubSub.set(chatId,session)
+                LocalPubSub.set(chatId, session)
                 ws.send(JSON.stringify({
                     type: MessagesTypes.INITIATED_SESSION,
                     payload: {
@@ -60,7 +63,7 @@ wss.on("connection", (ws) => {
 
         } catch (error) {
             console.error(error);
-             ws.send(JSON.stringify({
+            ws.send(JSON.stringify({
                 type: MessagesTypes.INVALID_REQUEST,
                 payload: {
                     data: {

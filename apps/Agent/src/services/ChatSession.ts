@@ -6,18 +6,30 @@ import { prisma } from "@workspace/db/"
 import { SystemPrompts } from "../utils/systemPrompts";
 import { LLMClient } from "./LLMclient";
 import Tools from "./tools"
+import FetchWithRetry from "../utils/RetryingMechanism";
+import GeminiEmbeddings from "../utils/Embeddings";
+import GenerateContext from "../utils/GetContext";
+import LLMCall from "../utils/LLMCall";
 
-const templateEnum = zod.enum([
-    'node_js',
-    'node_js_typescript',
-    'react',
-    'react_typescript',
-    'cpp',
-    'python',
-    'python_django',
-    'next_js',
-    'next_js_turbo'
-]);
+
+interface MessageOutput {
+    type: "output";
+    message: string;
+    completeInfo: string;
+    nextMessage: string;
+    importantNoteToUser: string | null;
+    importantNoteToServer: string | null;
+    stopNow: boolean;
+}
+
+interface FunctionCalling {
+    type: "function_call";
+    name: string;
+    arguments: Record<string, any> | null;
+}
+
+type LLMOutput = Array<MessageOutput | FunctionCalling>;
+
 const PromptMessageSchema = zod.object({
     chatID: zod.string(),
     message: zod.string().min(1).max(1000),
@@ -73,7 +85,7 @@ export class ChatSessionManager {
                         await queue.add(`usermessage/${chatID}/${messageSaved.id}`, {
                             message
                         })
-                        console.log("Saved user message in redis")
+                        await this.AgentCall(message, messageSaved.id, chatID);
 
 
 
@@ -98,33 +110,11 @@ export class ChatSessionManager {
     public CloseServer() {
         return this.ws.close()
     }
-    public async AgentCall(Message: string, MessageId: string, ChatId: string, Context: String) {
-        try {
-            const response = await LLMClient.responses.create({
-                model: "qwen/qwen3-235b-a22b:free",
-                input: [
-                    {
-                        role: "system",
-                        content: SystemPrompts.Base
-                    },
-                    {
-                        role: "system",
-                        content: SystemPrompts.Agent
-                    },
-                    {
-                        role:"user",
-                        content:""
-                    }
-                ],
-                tools: Tools as any
-                
-
-            })
-            this.ws.send(JSON.stringify(response.output))
-            console.log(response.output);
-        } catch (error) {
-                console.error(error);
-                throw Error("Unable to start agent");
-        }
+    public async AgentCall(
+        Message: string,
+        MessageId: string,
+        ChatId: string
+    ) {
+        await LLMCall(ChatId, Message,null,this.ws);
     }
 }

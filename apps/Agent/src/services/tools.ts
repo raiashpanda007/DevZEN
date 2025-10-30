@@ -1,5 +1,6 @@
 import { z as zod } from "zod"
 import ToolsList from "@workspace/functions"
+
 const templateEnum = zod.enum([
     'node_js',
     'node_js_typescript',
@@ -12,6 +13,33 @@ const templateEnum = zod.enum([
     'next_js_turbo'
 ]);
 const Tools = [
+    {
+        strict: true,
+        type: "function",
+        name: ToolsList.GET_TEMPLATES,
+        description: "This function fetch the list all the templates which devzen offers on which agent can build projects upon. Step should be taken before creating project.",
+        parameters: {
+            type: "object",
+            properties: {},
+            additionalProperties: false
+        }
+    },
+    {
+        strict: true,
+        type: "function",
+        name: ToolsList.CHECK_PROJECT_ASSOCIATED,
+        description: "This is the function that checks that is any project associcated to chat , if Yes it will it will connect you to pod, else No return false",
+        parameters: {
+            type: "object",
+            properties: {
+                chatId: {
+                    type: "string",
+                    description: "Please provide the chatId, whose project you want to check for the chat session"
+                }
+            },
+            required: ["chatId"]
+        }
+    },
     {
         strict: true,
         type: "function",
