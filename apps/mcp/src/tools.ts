@@ -75,7 +75,8 @@ server.registerTool(
                         type: "text",
                         text: JSON.stringify(project),
                     },
-                ]
+                ], 
+                structuredContent: project
             }
 
         } catch (error) {
@@ -88,46 +89,46 @@ const ListOFTemplates = [
     {
         name: 'Node JS',
         id: 'node_js',
-        image: 'node-js.svg',
+
     },
     {
         name: 'React JS',
         id: 'react_js',
-        image: 'react.svg',
+
     },
     {
         name: 'React with TypeScript',
         id: 'react_typescript',
-        image: 'react.svg',
+
     },
     {
         name: 'Node JS with TypeScript',
         id: 'node_js_typescript',
-        image: 'typescript.svg',
+
     },
     {
         name: 'C++',
         id: 'cpp',
-        image: 'cpp.svg',
+
     },
     {
         name: 'Python',
         id: 'python',
-        image: 'python.svg',
+
     },
     {
         name: 'Python with Django',
         id: 'python_django',
-        image: 'django.svg',
+
     },
     {
         name: 'NextJS with TypeScript',
         id: 'next_js',
-        image: 'next.svg',
+
     }, {
         name: 'Next with TurboRepo',
         id: 'next_js_turbo',
-        image: 'next.svg',
+
     }
 ]
 server.registerTool(
@@ -150,56 +151,45 @@ server.registerTool(
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(ListOFTemplates)
+                    text: JSON.stringify({ templates: ListOFTemplates }, null, 2)
 
                 }
-            ]
+            ],
+            structuredContent: { templates: ListOFTemplates }
         }
     }
 
 )
 
+
 server.registerTool(
-    ToolsList.CHECK_PROJECT_ASSOCIATED,
+    `${ToolsList.CHECK_PROJECT_ASSOCIATED}`,
     {
         title: ToolsList.CHECK_PROJECT_ASSOCIATED,
         description: "This is the function that checks that is any project associcated to chat , if Yes it will it will connect you to pod, else No return false",
-        inputSchema:{
-            chatId:zod.string()
+        inputSchema: {
+            chatId: zod.string()
         },
-        outputSchema:{
-            result : zod.string() || zod.boolean()
+        outputSchema: {
+            result: zod.union([zod.string(), zod.boolean()])
         }
     },
-    async ({chatId}) =>{
-        try {
-            const ProjectFromChat = await prisma.chats.findFirst({
-                where:{
-                    id:chatId
+    async ({ chatId }) => {
+        const project = await prisma.chats.findFirst({ where: { id: chatId } });
+        const output = {
+            result: project?.projectId ?? false
+        };
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(output)
                 }
-            });
-            if(!ProjectFromChat || !ProjectFromChat.projectId) {
-                return {
-                    content:[
-                        {
-                            type:"text",
-                            text:JSON.stringify(false)
-                        }
-                    ]
-                }    
-            }
-            return {
-                content:[
-                    {
-                        type:"text",
-                        text:JSON.stringify(ProjectFromChat.projectId)
-                    }
-                ]
-            }
-        } catch (error) {
-            throw error;
-        }
+            ],
+            structuredContent: output
+        };
     }
-)
+);
 
 

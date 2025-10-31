@@ -3,32 +3,8 @@ import MessagesTypes from "../messages";
 import { z as zod } from "zod";
 import queue from "@workspace/queue"
 import { prisma } from "@workspace/db/"
-import { SystemPrompts } from "../utils/systemPrompts";
-import { LLMClient } from "./LLMclient";
-import Tools from "./tools"
-import FetchWithRetry from "../utils/RetryingMechanism";
-import GeminiEmbeddings from "../utils/Embeddings";
-import GenerateContext from "../utils/GetContext";
 import LLMCall from "../utils/LLMCall";
 
-
-interface MessageOutput {
-    type: "output";
-    message: string;
-    completeInfo: string;
-    nextMessage: string;
-    importantNoteToUser: string | null;
-    importantNoteToServer: string | null;
-    stopNow: boolean;
-}
-
-interface FunctionCalling {
-    type: "function_call";
-    name: string;
-    arguments: Record<string, any> | null;
-}
-
-type LLMOutput = Array<MessageOutput | FunctionCalling>;
 
 const PromptMessageSchema = zod.object({
     chatID: zod.string(),
@@ -44,11 +20,14 @@ const PromptMessageSchema = zod.object({
 export class ChatSessionManager {
     public id: string
     public ws: WebSocket
+    public userId: string
 
-    constructor(id: string, ws: WebSocket) {
+    constructor(id: string, ws: WebSocket,userId:string) {
         this.id = id;
-        this.ws = ws
-        this.Messagehandler()
+        this.ws = ws;
+        this.userId = userId
+        this.Messagehandler();
+
     }
 
     private async Messagehandler() {
@@ -112,9 +91,9 @@ export class ChatSessionManager {
     }
     public async AgentCall(
         Message: string,
-        MessageId: string,
-        ChatId: string
+        UserId: string,
+        ChatId: string,
     ) {
-        await LLMCall(ChatId, Message,null,this.ws);
+        await LLMCall(ChatId, Message,this.ws,UserId);
     }
 }

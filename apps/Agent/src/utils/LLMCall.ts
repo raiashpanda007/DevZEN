@@ -8,6 +8,9 @@ import type { WebSocket } from "ws";
 import MessagesTypes from "../messages";
 import { prisma } from "@workspace/db/"
 import queue from "@workspace/queue";
+import { MCPClient } from "../services/McpClient";
+import { MCP_SERVER_URL } from "../config";
+import ToolsList from "@workspace/functions"
 interface ToolsResultsType {
     name: string,
     result: any
@@ -41,11 +44,16 @@ async function SafeParsing<T>(text: string) {
 }
 
 
-async function LLMCall(ChatId: string, Message: string, ToolsResult: ToolsResultsType | null, ws: WebSocket) {
+async function LLMCall(ChatId: string, Message: string, ws: WebSocket, UserId: string) {
+    if (!MCP_SERVER_URL) {
+        throw Error("Unable to connect the mcop server");
+    }
+    const mcpClient = await MCPClient(MCP_SERVER_URL)
     const maxRetries = 25;
     let currAttempt = 0;
     let nextStepMessage = "";
     let status: boolean = false;
+    let toolsResponse: ToolsResultsType[] = [];
     while (currAttempt <= maxRetries && !status) {
         try {
             const qVector = await GeminiEmbeddings.embedQuery(Message);
@@ -63,7 +71,7 @@ async function LLMCall(ChatId: string, Message: string, ToolsResult: ToolsResult
                     },
                     {
                         role: "assistant",
-                        content: `Relevant context retrieved from vector Db for chat ${ChatId} :\n ${Context}`
+                        content: `Relevant context retrieved from vector Db for chat ${ChatId} :\n ${Context} and for user ${UserId}`
                     },
                     ...(nextStepMessage ? [{
                         role: "assistant",
@@ -71,7 +79,7 @@ async function LLMCall(ChatId: string, Message: string, ToolsResult: ToolsResult
                     }] : []),
                     {
                         role: "system",
-                        content: `Results from tools executed in the previous step \n ${JSON.stringify(ToolsResult)}`
+                        content: `Results from tools executed in the previous step \n ${JSON.stringify(toolsResponse)}`
                     },
                     {
                         role: "user",
@@ -104,7 +112,7 @@ async function LLMCall(ChatId: string, Message: string, ToolsResult: ToolsResult
                         }
                     }));
                     nextStepMessage = nextMessage;
-                    status = stopNow
+                    status = stopNow;
                     void (async () => {
                         try {
                             const savedMsg = await prisma.messages.create({
@@ -115,17 +123,41 @@ async function LLMCall(ChatId: string, Message: string, ToolsResult: ToolsResult
                                 },
                             });
                             await queue.add(`llmmessage/${ChatId}/${savedMsg.id}`, {
-                                completeInfo,
+                                message: completeInfo,
                             });
                         } catch (error) {
                             console.error("DB or Queue Error:", error);
-                            ws.send(
+                            return ws.send(
                                 JSON.stringify({
                                     type: MessagesTypes.INTERNAL_SERVER_ERROR,
                                 })
                             );
                         }
                     })();
+
+                } else {
+                    const { arguments: args, name } = output;
+                    if (!ToolsList[name]) {
+                        console.error("Invalid tool name", name);
+                        break;
+                    }
+                    const toolName = ToolsList[name];
+                    const toolsResults = await mcpClient.callTool({
+                        name: toolName,
+                        arguments: args ?? undefined
+                    });
+                    toolsResponse.push({
+                        name: toolName,
+                        result: toolsResults.content
+                    })
+                    ws.send(JSON.stringify({
+                        type: MessagesTypes.TOOL_CALLING_UPDATE,
+                        payload: {
+                            data: {
+                                toolsResults
+                            }
+                        }
+                    }));
 
                 }
             }

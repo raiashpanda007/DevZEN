@@ -8,8 +8,7 @@ import { ChatSessionManager } from "./services/ChatSession";
 import MessagesTypes from "./messages";
 import LLMRouter from "./routes/llm.routes"
 import { PORT } from "./config";
-import { mcpClient } from "./services/McpClient"
-import { MCP_SERVER_URL } from './config'
+import { prisma } from "@workspace/db/";
 
 validateConfig();
 
@@ -17,7 +16,6 @@ const app = express();
 const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server, path: "/ws" });
-const mcp = mcpClient(MCP_SERVER_URL ?? "");
 
 
 wss.on("connection", (ws) => {
@@ -32,7 +30,7 @@ wss.on("connection", (ws) => {
         try {
             const message = JSON.parse(data.toString());
             const { type, payload } = message;
-
+            let userId: string;
 
             if (type == MessagesTypes.INIT_CHAT_SESSION) {
                 const { chatId } = payload.data
@@ -46,7 +44,24 @@ wss.on("connection", (ws) => {
                         }
                     }))
                 }
-                const session = new ChatSessionManager(chatId, ws)
+                try {
+                    const user = await prisma.chats.findFirst({
+                        where: {
+                            id: chatId
+                        },
+                        select: {
+                            user: true
+                        }
+                    });
+                    if(!user) {
+                        throw Error("Invalid ChatId. It doesn't exist.")
+                    }
+                    userId = user.user.id;
+
+                } catch (error) {
+                    throw Error("Invalid ChatId. It doesn't exist.")
+                }
+                const session = new ChatSessionManager(chatId, ws,userId)
                 if (LocalPubSub.has(chatId)) {
                     LocalPubSub.get(chatId)?.CloseServer();
                 }

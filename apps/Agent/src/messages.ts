@@ -5,13 +5,15 @@ const INITIATED_SESSION = "INITIATED_SESSION"
 const LLM_REQUEST = "REQUEST_LLM"
 const USER_UPDATE = "USER_UPDATE";
 const INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR"
-const MessagesTypes = {
+const TOOL_CALLING_UPDATE = "TOOL_CALLING_UPDATE"
+const MessagesTypes: Record<string, string> = {
     INIT_CHAT_SESSION,
     INVALID_REQUEST,
     PROMPT,
     INITIATED_SESSION,
     LLM_REQUEST,
     USER_UPDATE,
-    INTERNAL_SERVER_ERROR
+    INTERNAL_SERVER_ERROR,
+    TOOL_CALLING_UPDATE
 }
-export default MessagesTypes
+export default MessagesTypes;

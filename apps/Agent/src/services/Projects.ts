@@ -1,11 +1,11 @@
 import { LLMClient } from "./LLMclient";
-import { mcpClient } from "./McpClient";
+import { MCPClient } from "./McpClient";
 import { MCP_SERVER_URL } from "../config";
 async function CreateProject(message: string, userId: string) {
 
     try {
         if (!MCP_SERVER_URL) throw new Error("Please provide mcp server url");
-        const client = await mcpClient(MCP_SERVER_URL);
+        const client = await MCPClient(MCP_SERVER_URL);
         const llmresponse = await LLMClient.chat.completions.create({
             model: "qwen/qwen3-coder:free",
             messages: [
